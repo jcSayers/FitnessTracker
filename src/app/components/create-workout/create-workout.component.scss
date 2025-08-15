@@ -1,0 +1,243 @@
+.create-workout-container {
+  min-height: 100vh;
+  padding: 16px;
+  padding-bottom: 80px; // Space for bottom navigation
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  .back-button {
+    color: var(--primary-text);
+  }
+  
+  h1 {
+    margin: 0;
+  }
+}
+
+.workout-form {
+  .form-section {
+    margin-bottom: 24px;
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color);
+    
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-text) !important;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    
+    .section-actions {
+      margin-left: auto;
+    }
+    
+    mat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+  }
+  
+  .form-row {
+    margin-bottom: 16px;
+    
+    &.grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    &.grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  // Exercise specific styles
+  .exercise-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: var(--secondary-bg);
+    
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      
+      .exercise-number {
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.875rem;
+      }
+      
+      .exercise-controls {
+        display: flex;
+        gap: 4px;
+        
+        button {
+          &.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+    
+    .exercise-fields {
+      .form-row {
+        margin-bottom: 12px;
+      }
+    }
+    
+    .exercise-divider {
+      margin: 16px 0;
+      border-color: var(--border-color);
+    }
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 16px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: none;
+      font-weight: 500;
+    }
+  }
+}
+
+// Angular Material form field overrides
+::ng-deep {
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--secondary-bg) !important;
+    }
+    
+    .mat-mdc-form-field-label {
+      color: var(--secondary-text) !important;
+    }
+    
+    .mat-mdc-input-element {
+      color: var(--primary-text) !important;
+    }
+    
+    .mat-mdc-form-field-hint {
+      color: var(--secondary-text) !important;
+    }
+    
+    .mat-mdc-select-value {
+      color: var(--primary-text) !important;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: var(--secondary-text) !important;
+    }
+  }
+  
+  .mat-mdc-option {
+    color: var(--primary-text) !important;
+    
+    &:hover {
+      background-color: var(--secondary-bg) !important;
+    }
+    
+    &.mat-mdc-option-active {
+      background-color: var(--accent-color) !important;
+      color: white !important;
+    }
+  }
+  
+  .mat-mdc-select-panel {
+    background-color: var(--card-bg) !important;
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .create-workout-container {
+    padding: 8px;
+  }
+  
+  .workout-form {
+    .form-row {
+      &.grid-2 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      &.grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+    }
+    
+    .exercise-item {
+      padding: 12px;
+      
+      .exercise-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+        
+        .exercise-controls {
+          align-self: flex-end;
+        }
+      }
+    }
+    
+    .form-actions {
+      flex-direction: column;
+      gap: 8px;
+      
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+// Additional mobile breakpoint for very small screens
+@media (max-width: 480px) {
+  .workout-form {
+    .form-row {
+      &.grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+

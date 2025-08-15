@@ -1,0 +1,147 @@
+<div class="workout-list-container bg-primary">
+  <!-- Header with stats -->
+  <div class="stats-header card">
+    <h1 class="text-primary text-2xl font-bold mb-4">Fitness Tracker</h1>
+    
+    @if (workoutStats(); as stats) {
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value text-accent">{{ stats.totalWorkouts }}</div>
+          <div class="stat-label text-secondary">Total Workouts</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value text-accent">{{ stats.currentStreak }}</div>
+          <div class="stat-label text-secondary">Day Streak</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value text-accent">{{ formatDuration(stats.averageDuration) }}</div>
+          <div class="stat-label text-secondary">Avg Duration</div>
+        </div>
+      </div>
+      
+      <!-- Weekly progress -->
+      <div class="weekly-progress mt-4">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-primary font-medium">Weekly Goal</span>
+          <span class="text-secondary">{{ stats.weeklyProgress }} / {{ stats.weeklyGoal }}</span>
+        </div>
+        <mat-progress-bar 
+          [value]="getProgressPercentage()" 
+          mode="determinate"
+          class="progress-bar">
+        </mat-progress-bar>
+      </div>
+    }
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions card">
+    <h2 class="text-primary text-lg font-semibold mb-3">Quick Actions</h2>
+    <div class="action-buttons">
+      <button 
+        mat-raised-button 
+        color="primary"
+        class="action-btn"
+        (click)="viewHistory()">
+        <mat-icon>history</mat-icon>
+        Workout History
+      </button>
+      <button 
+        mat-raised-button 
+        color="accent"
+        class="action-btn"
+        (click)="createNewWorkout()">
+        <mat-icon>add</mat-icon>
+        Create Workout
+      </button>
+    </div>
+  </div>
+
+  <!-- Workout Templates -->
+  <div class="workout-templates">
+    <h2 class="text-primary text-lg font-semibold mb-4">Your Workouts</h2>
+    
+    @if (isLoading()) {
+      <div class="loading-state">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p class="text-secondary mt-4 text-center">Loading workouts...</p>
+      </div>
+    } @else if (workoutTemplates().length === 0) {
+      <div class="empty-state card text-center">
+        <mat-icon class="empty-icon text-secondary">fitness_center</mat-icon>
+        <h3 class="text-primary mb-2">No workouts yet</h3>
+        <p class="text-secondary mb-4">Create your first workout template to get started!</p>
+        <button mat-raised-button color="primary" (click)="createNewWorkout()">
+          Create Workout
+        </button>
+      </div>
+    } @else {
+      <div class="workout-grid">
+        @for (workout of workoutTemplates(); track workout.id) {
+          <mat-card class="workout-card">
+            <mat-card-header>
+              <div class="workout-header">
+                <div class="workout-info">
+                  <mat-card-title class="workout-title">{{ workout.name }}</mat-card-title>
+                  <mat-card-subtitle class="workout-subtitle">
+                    {{ workout.exercises.length }} exercises • {{ formatDuration(workout.estimatedDuration) }}
+                  </mat-card-subtitle>
+                </div>
+                <mat-icon class="category-icon text-accent">
+                  {{ getCategoryIcon(workout.category) }}
+                </mat-icon>
+              </div>
+            </mat-card-header>
+            
+            <mat-card-content>
+              @if (workout.description) {
+                <p class="workout-description text-secondary">{{ workout.description }}</p>
+              }
+              
+              <div class="workout-meta">
+                <mat-chip-set>
+                  <mat-chip 
+                    [class]="'difficulty-' + workout.difficulty"
+                    class="difficulty-chip">
+                    {{ workout.difficulty | titlecase }}
+                  </mat-chip>
+                  <mat-chip class="category-chip">
+                    {{ workout.category | titlecase }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions class="workout-actions">
+              <button 
+                mat-button 
+                color="primary"
+                (click)="editWorkout(workout)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button 
+                mat-raised-button 
+                color="primary"
+                (click)="startWorkout(workout)">
+                <mat-icon>play_arrow</mat-icon>
+                Start Workout
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Floating Action Button -->
+  <button 
+    mat-fab 
+    color="accent"
+    class="fab-add"
+    (click)="createNewWorkout()"
+    aria-label="Add new workout">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+

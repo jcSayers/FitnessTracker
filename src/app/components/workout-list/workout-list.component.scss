@@ -1,0 +1,254 @@
+.workout-list-container {
+  min-height: 100vh;
+  padding: 16px;
+  padding-bottom: 80px; // Space for bottom navigation
+}
+
+.stats-header {
+  margin-bottom: 24px;
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .stat-item {
+    text-align: center;
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+  }
+  
+  .weekly-progress {
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      
+      ::ng-deep .mdc-linear-progress__bar-inner {
+        background-color: var(--accent-color);
+      }
+      
+      ::ng-deep .mdc-linear-progress__buffer {
+        background-color: var(--border-color);
+      }
+    }
+  }
+}
+
+.quick-actions {
+  margin-bottom: 24px;
+  
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    text-transform: none;
+    font-weight: 500;
+  }
+}
+
+.workout-templates {
+  .loading-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  
+  .empty-state {
+    padding: 40px 20px;
+    
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      margin-bottom: 16px;
+    }
+  }
+  
+  .workout-grid {
+    display: grid;
+    gap: 16px;
+  }
+  
+  .workout-card {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .workout-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      
+      .workout-info {
+        flex: 1;
+      }
+      
+      .workout-title {
+        color: var(--primary-text) !important;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      
+      .workout-subtitle {
+        color: var(--secondary-text) !important;
+        font-size: 0.875rem;
+      }
+      
+      .category-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-left: 12px;
+      }
+    }
+    
+    .workout-description {
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+    
+    .workout-meta {
+      margin-top: 16px;
+      
+      mat-chip-set {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      
+      .difficulty-chip {
+        &.difficulty-beginner {
+          background-color: var(--success-color);
+          color: white;
+        }
+        
+        &.difficulty-intermediate {
+          background-color: var(--warning-color);
+          color: white;
+        }
+        
+        &.difficulty-advanced {
+          background-color: var(--error-color);
+          color: white;
+        }
+      }
+      
+      .category-chip {
+        background-color: var(--accent-color);
+        color: white;
+      }
+    }
+    
+    .workout-actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px;
+      gap: 8px;
+      
+      button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        text-transform: none;
+      }
+    }
+  }
+}
+
+.fab-add {
+  position: fixed;
+  bottom: 88px; // Above bottom navigation
+  right: 16px;
+  z-index: 1000;
+  
+  &.mat-mdc-fab.mat-accent {
+    background-color: var(--accent-color) !important;
+    
+    &:hover {
+      background-color: var(--accent-dark) !important;
+    }
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .workout-list-container {
+    padding: 8px;
+  }
+  
+  .stats-header {
+    .stats-grid {
+      gap: 8px;
+    }
+    
+    .stat-item .stat-value {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .quick-actions {
+    .action-buttons {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  
+  .workout-card {
+    margin-bottom: 12px;
+    
+    .workout-actions {
+      flex-direction: column;
+      gap: 8px;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+  
+  .fab-add {
+    right: 12px;
+    bottom: 84px;
+  }
+}
+
+// Dark theme specific adjustments
+::ng-deep .mat-mdc-card {
+  background-color: var(--card-bg) !important;
+  color: var(--primary-text) !important;
+  
+  .mat-mdc-card-title {
+    color: var(--primary-text) !important;
+  }
+  
+  .mat-mdc-card-subtitle {
+    color: var(--secondary-text) !important;
+  }
+}
+

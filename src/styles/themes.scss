@@ -1,0 +1,103 @@
+@use "sass:map";
+@use '@angular/material' as mat;
+
+/* Set the base colors for light themes */
+$light-base: (
+  foreground: (
+    base: #000000,
+    divider: #E2E8F0,
+    dividers: #E2E8F0,
+    disabled: #94A3B8,
+    disabled-button: #94A3B8,
+    disabled-text: #94A3B8,
+    elevation: #000000,
+    hint-text: #94A3B8,
+    secondary-text: #64748B,
+    icon: #64748B,
+    icons: #64748B,
+    mat-icon: #64748B,
+    text: #1E293B,
+    slider-min: #1E293B,
+    slider-off: #CBD5E1,
+    slider-off-active: #94A3B8
+  ),
+  background: (
+    status-bar: #CBD5E1,
+    app-bar: #FFFFFF,
+    background: #F1F5F9,
+    hover: rgba(148, 163, 184, 0.12),
+    card: #FFFFFF,
+    dialog: #FFFFFF,
+    disabled-button: rgba(148, 163, 184, 0.38),
+    raised-button: #FFFFFF,
+    focused-button: #64748B,
+    selected-button: #E2E8F0,
+    selected-disabled-button: #E2E8F0,
+    disabled-button-toggle: #CBD5E1,
+    unselected-chip: #E2E8F0,
+    disabled-list-option: #CBD5E1,
+    tooltip: #1E293B
+  )
+);
+
+/* Set the base colors for dark themes */
+$dark-base: (
+  foreground: (
+    base: #FFFFFF,
+    divider: rgba(241, 245, 249, 0.12),
+    dividers: rgba(241, 245, 249, 0.12),
+    disabled: #475569,
+    disabled-button: #1E293B,
+    disabled-text: #475569,
+    elevation: #000000,
+    hint-text: #64748B,
+    secondary-text: #94A3B8,
+    icon: #F1F5F9,
+    icons: #F1F5F9,
+    mat-icon: #94A3B8,
+    text: #FFFFFF,
+    slider-min: #FFFFFF,
+    slider-off: #64748B,
+    slider-off-active: #94A3B8
+  ),
+  background: (
+    status-bar: #0F172A,
+    app-bar: #0F172A,
+    background: #0F172A,
+    hover: rgba(255, 255, 255, 0.05),
+    card: #1E293B,
+    dialog: #1E293B,
+    disabled-button: rgba(15, 23, 42, 0.38),
+    raised-button: #0F172A,
+    focused-button: #E2E8F0,
+    selected-button: rgba(255, 255, 255, 0.05),
+    selected-disabled-button: #1E293B,
+    disabled-button-toggle: #0F172A,
+    unselected-chip: #475569,
+    disabled-list-option: #E2E8F0,
+    tooltip: #64748B
+  )
+);
+
+/* Custom theme variables */
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #64748b;
+  --background-color: #ffffff;
+  --surface-color: #f8fafc;
+  --error-color: #ef4444;
+  --text-color: #1e293b;
+  --border-color: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #60a5fa;
+    --secondary-color: #94a3b8;
+    --background-color: #0f172a;
+    --surface-color: #1e293b;
+    --error-color: #f87171;
+    --text-color: #f1f5f9;
+    --border-color: #334155;
+  }
+}

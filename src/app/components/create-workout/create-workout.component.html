@@ -1,0 +1,244 @@
+<div class="create-workout-container bg-primary">
+  <div class="header">
+    <button mat-icon-button (click)="onCancel()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="text-primary text-xl font-bold">
+      {{ isEditMode() ? 'Edit Workout' : 'Create New Workout' }}
+    </h1>
+  </div>
+
+  <form [formGroup]="workoutForm" (ngSubmit)="onSubmit()" class="workout-form">
+    <!-- Basic Information -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title class="section-title">
+          <mat-icon>info</mat-icon>
+          Basic Information
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Workout Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g., Upper Body Strength">
+            @if (isFieldRequired('name')) {
+              <mat-error>{{ getFieldError('name') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description (Optional)</mat-label>
+            <textarea 
+              matInput 
+              formControlName="description" 
+              rows="3" 
+              placeholder="Describe your workout...">
+            </textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row grid-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category">
+              @for (category of workoutCategories; track category) {
+                <mat-option [value]="category">
+                  {{ category | titlecase }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (isFieldRequired('category')) {
+              <mat-error>{{ getFieldError('category') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Difficulty</mat-label>
+            <mat-select formControlName="difficulty">
+              @for (difficulty of difficultyLevels; track difficulty) {
+                <mat-option [value]="difficulty">
+                  {{ difficulty | titlecase }}
+                </mat-option>
+              }
+            </mat-select>
+            @if (isFieldRequired('difficulty')) {
+              <mat-error>{{ getFieldError('difficulty') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Duration (minutes)</mat-label>
+            <input 
+              matInput 
+              type="number" 
+              formControlName="estimatedDuration" 
+              min="5" 
+              max="300">
+            @if (isFieldRequired('estimatedDuration')) {
+              <mat-error>{{ getFieldError('estimatedDuration') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Exercises -->
+    <mat-card class="form-section">
+      <mat-card-header>
+        <mat-card-title class="section-title">
+          <mat-icon>fitness_center</mat-icon>
+          Exercises ({{ exercises.length }})
+        </mat-card-title>
+        <div class="section-actions">
+          <button 
+            type="button" 
+            mat-raised-button 
+            color="primary"
+            (click)="addExercise()">
+            <mat-icon>add</mat-icon>
+            Add Exercise
+          </button>
+        </div>
+      </mat-card-header>
+
+             <mat-card-content>
+         @if (workoutForm && exercises && exercises.length > 0) {
+           @for (exercise of exercises.controls; track $index; let i = $index) {
+             <div class="exercise-item" [formGroupName]="i">
+            <div class="exercise-header">
+              <span class="exercise-number">{{ i + 1 }}</span>
+              <div class="exercise-controls">
+                <button 
+                  type="button" 
+                  mat-icon-button
+                  [disabled]="i === 0"
+                  (click)="moveExerciseUp(i)"
+                  [class.disabled]="i === 0">
+                  <mat-icon>keyboard_arrow_up</mat-icon>
+                </button>
+                <button 
+                  type="button" 
+                  mat-icon-button
+                  [disabled]="i === exercises.length - 1"
+                  (click)="moveExerciseDown(i)"
+                  [class.disabled]="i === exercises.length - 1">
+                  <mat-icon>keyboard_arrow_down</mat-icon>
+                </button>
+                <button 
+                  type="button" 
+                  mat-icon-button
+                  color="warn"
+                  (click)="removeExercise(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="exercise-fields">
+              <div class="form-row grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Exercise Name</mat-label>
+                  <input 
+                    matInput 
+                    formControlName="name" 
+                    [placeholder]="getExerciseTypePlaceholder(exercise.get('category')?.value)">
+                  @if (isFieldRequired('name', i)) {
+                    <mat-error>{{ getFieldError('name', i) }}</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    @for (category of exerciseCategories; track category) {
+                      <mat-option [value]="category">
+                        {{ category | titlecase }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row grid-4">
+                <mat-form-field appearance="outline">
+                  <mat-label>Sets</mat-label>
+                  <input matInput type="number" formControlName="sets" min="1" max="20">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Reps</mat-label>
+                  <input matInput type="number" formControlName="reps" min="1" max="100">
+                  <mat-hint>Leave empty for time-based</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Weight (lbs)</mat-label>
+                  <input matInput type="number" formControlName="weight" min="0" max="1000">
+                  <mat-hint>Optional</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Duration (sec)</mat-label>
+                  <input matInput type="number" formControlName="duration" min="1" max="3600">
+                  <mat-hint>For time-based exercises</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Rest Time (seconds)</mat-label>
+                  <input matInput type="number" formControlName="restTime" min="0" max="600">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Notes (Optional)</mat-label>
+                  <input matInput formControlName="notes" placeholder="Form cues, modifications...">
+                </mat-form-field>
+              </div>
+            </div>
+
+                         @if (i < exercises.length - 1) {
+               <mat-divider class="exercise-divider"></mat-divider>
+             }
+           </div>
+           }
+         } @else {
+           <div class="loading-state">
+             <p>Initializing form...</p>
+           </div>
+         }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        mat-button 
+        (click)="onCancel()"
+        [disabled]="isSubmitting()">
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        mat-raised-button 
+        color="primary"
+        [disabled]="workoutForm.invalid || isSubmitting()">
+        @if (isSubmitting()) {
+          <mat-icon>refresh</mat-icon>
+          {{ isEditMode() ? 'Updating...' : 'Creating...' }}
+        } @else {
+          <mat-icon>save</mat-icon>
+          {{ isEditMode() ? 'Update Workout' : 'Create Workout' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>
+

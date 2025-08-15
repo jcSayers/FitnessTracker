@@ -1,33 +1,47 @@
-
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
-@use '@angular/material' as mat;
-
-html {
-  @include mat.theme((
-    color: (
-      theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
-}/* You can add global styles to this file, and also import other style files */
-html {
-    height: 100%;
-  }
-  body {
-    min-height: 100%;
-  }
-
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+@import './styles/themes.scss';
+
+/* Global styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: var(--background-color, #fafafa);
+  color: var(--text-color, rgba(0, 0, 0, 0.87));
+}
+
+/* Basic Material Design styles */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-fab,
+.mat-mdc-mini-fab {
+  border-radius: 8px !important;
+}
+
+.mat-mdc-card {
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+/* Custom Material theme colors using CSS variables */
+:root {
+  --mdc-filled-button-container-color: var(--primary-color);
+  --mdc-filled-button-label-text-color: white;
+  --mdc-outlined-button-label-text-color: var(--primary-color);
+  --mdc-outlined-button-outline-color: var(--primary-color);
+  --mdc-text-button-label-text-color: var(--primary-color);
+  --mdc-elevated-card-container-color: var(--surface-color);
+  --mdc-outlined-card-container-color: var(--surface-color);
+  --mdc-filled-card-container-color: var(--surface-color);
+}
