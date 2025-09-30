@@ -13,6 +13,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DatabaseService } from '../../services/database.service';
+import { RestTimerComponent } from '../rest-timer/rest-timer.component';
 import {
   WorkoutTemplate,
   WorkoutInstance,
@@ -35,7 +36,8 @@ import {
     MatInputModule,
     MatFormFieldModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    RestTimerComponent
   ],
   templateUrl: './active-workout.component.html',
   styleUrls: ['./active-workout.component.scss']
@@ -470,6 +472,36 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/dashboard']);
     }
+  }
+
+  // Helper methods for set tracking circles
+  getExerciseSets(exercise: Exercise): number[] {
+    return Array.from({ length: exercise.sets }, (_, i) => i);
+  }
+
+  isSetCompleted(exercise: Exercise, setIndex: number): boolean {
+    const instance = this.workoutInstance();
+    if (!instance) return false;
+
+    const set = instance.sets.find(s =>
+      s.exerciseId === exercise.id && s.setNumber === setIndex + 1
+    );
+
+    return set?.completed || false;
+  }
+
+  isCurrentSet(exerciseIndex: number, setIndex: number): boolean {
+    return this.currentExerciseIndex() === exerciseIndex &&
+           this.currentSetIndex() === setIndex &&
+           this.isWorkoutActive();
+  }
+
+  onRestTimerDismissed() {
+    this.skipRest();
+  }
+
+  onRestTimerComplete() {
+    this.endRestPeriod();
   }
 }
 

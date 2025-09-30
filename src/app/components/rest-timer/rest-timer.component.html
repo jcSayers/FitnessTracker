@@ -1,0 +1,21 @@
+<div class="rest-timer-container">
+  <div class="timer-content">
+    <div class="timer-display">
+      <div class="time">{{ formatTime(timeRemaining()) }}</div>
+      <div class="label">Rest {{ formatTime(restDuration) }}</div>
+    </div>
+
+    <button
+      mat-icon-button
+      class="dismiss-button"
+      (click)="dismiss()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-progress-bar
+    mode="determinate"
+    [value]="progressValue()"
+    class="progress-bar">
+  </mat-progress-bar>
+</div>

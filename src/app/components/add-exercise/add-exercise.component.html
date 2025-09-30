@@ -1,0 +1,146 @@
+<div class="add-exercise-container">
+  <div class="header">
+    <button mat-button (click)="onCancel()" class="cancel-button">
+      Cancel
+    </button>
+    <h1>{{ isEditMode ? 'Edit Exercise' : 'Create Exercise' }}</h1>
+    <button
+      mat-button
+      color="primary"
+      (click)="onSave()"
+      [disabled]="exerciseForm.invalid"
+      class="done-button">
+      Done
+    </button>
+  </div>
+
+  <form [formGroup]="exerciseForm" class="exercise-form">
+    <!-- Exercise Name -->
+    <div class="form-group">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Exercise Name</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          [placeholder]="getPlaceholder(exerciseForm.get('category')?.value)"
+          autocomplete="off">
+        @if (isFieldInvalid('name')) {
+          <mat-error>{{ getFieldError('name') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Category -->
+    <div class="form-section">
+      <label class="section-label">Type</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select formControlName="category">
+          @for (category of exerciseCategories; track category) {
+            <mat-option [value]="category">
+              {{ category | titlecase }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Sets and Reps -->
+    <div class="form-section">
+      <label class="section-label">Sets & Reps</label>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Sets</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="sets"
+            min="1"
+            max="20">
+          @if (isFieldInvalid('sets')) {
+            <mat-error>{{ getFieldError('sets') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Reps (optional)</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="reps"
+            min="1"
+            max="100">
+          @if (isFieldInvalid('reps')) {
+            <mat-error>{{ getFieldError('reps') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Weight and Duration -->
+    <div class="form-section">
+      <label class="section-label">Load & Duration</label>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Weight (optional)</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="weight"
+            min="0"
+            max="1000">
+          <span matTextSuffix>lbs</span>
+          @if (isFieldInvalid('weight')) {
+            <mat-error>{{ getFieldError('weight') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Duration (optional)</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="duration"
+            min="1"
+            max="3600">
+          <span matTextSuffix>sec</span>
+          @if (isFieldInvalid('duration')) {
+            <mat-error>{{ getFieldError('duration') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Rest Time -->
+    <div class="form-section">
+      <label class="section-label">Rest Between Sets</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Rest Time</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="restTime"
+          min="0"
+          max="600">
+        <span matTextSuffix>seconds</span>
+        @if (isFieldInvalid('restTime')) {
+          <mat-error>{{ getFieldError('restTime') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-section">
+      <label class="section-label">Notes (Optional)</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notes</mat-label>
+        <textarea
+          matInput
+          formControlName="notes"
+          rows="3"
+          placeholder="Form cues, modifications, etc."
+          autocomplete="off">
+        </textarea>
+      </mat-form-field>
+    </div>
+  </form>
+</div>

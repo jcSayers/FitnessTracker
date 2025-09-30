@@ -1,0 +1,201 @@
+.calendar-heatmap {
+  padding: 20px;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 20px;
+
+  .legend-label {
+    font-size: 12px;
+    color: var(--secondary-text);
+  }
+
+  .legend-boxes {
+    display: flex;
+    gap: 4px;
+  }
+
+  .legend-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+
+    &.intensity-low {
+      background: rgba(8, 136, 255, 0.3);
+      border-color: rgba(8, 136, 255, 0.4);
+    }
+
+    &.intensity-medium {
+      background: rgba(8, 136, 255, 0.6);
+      border-color: rgba(8, 136, 255, 0.7);
+    }
+
+    &.intensity-high {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px rgba(8, 136, 255, 0.5);
+    }
+  }
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.month-container {
+  .month-header {
+    margin-bottom: 12px;
+
+    .month-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .month-grid {
+    .weekday-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+
+      .weekday-label {
+        font-size: 11px;
+        color: var(--secondary-text);
+        text-align: center;
+        padding: 4px;
+      }
+    }
+
+    .week-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+
+      .day-cell {
+        aspect-ratio: 1;
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+
+        .day-number {
+          font-size: 11px;
+          color: var(--secondary-text);
+          font-weight: 500;
+        }
+
+        &.not-current-month {
+          opacity: 0.3;
+
+          .day-number {
+            color: rgba(255, 255, 255, 0.2);
+          }
+        }
+
+        &.is-today {
+          border: 2px solid var(--primary-color);
+          border-radius: 6px;
+        }
+
+        &.has-workout {
+          &.intensity-low {
+            background: rgba(8, 136, 255, 0.3);
+            border-color: rgba(8, 136, 255, 0.4);
+
+            .day-number {
+              color: var(--primary-color);
+              font-weight: 700;
+            }
+          }
+
+          &.intensity-medium {
+            background: rgba(8, 136, 255, 0.6);
+            border-color: rgba(8, 136, 255, 0.7);
+
+            .day-number {
+              color: white;
+              font-weight: 700;
+            }
+          }
+
+          &.intensity-high {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 12px rgba(8, 136, 255, 0.4);
+
+            .day-number {
+              color: white;
+              font-weight: 700;
+            }
+          }
+        }
+
+        &:hover:not(.not-current-month) {
+          transform: scale(1.1);
+          z-index: 1;
+          box-shadow: 0 2px 8px rgba(8, 136, 255, 0.3);
+        }
+      }
+    }
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .calendar-heatmap {
+    padding: 16px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .calendar-legend {
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .legend-label {
+      font-size: 11px;
+    }
+
+    .legend-box {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  .month-container .month-grid {
+    .weekday-labels .weekday-label {
+      font-size: 10px;
+      padding: 2px;
+    }
+
+    .week-row .day-cell {
+      .day-number {
+        font-size: 10px;
+      }
+    }
+  }
+}

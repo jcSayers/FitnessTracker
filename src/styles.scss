@@ -4,16 +4,18 @@
 
 @import './styles/themes.scss';
 
-/* Global styles */
+/* Global styles - SetGraph inspired */
 html, body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: var(--background-color, #fafafa);
-  color: var(--text-color, rgba(0, 0, 0, 0.87));
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 /* Basic Material Design styles */
@@ -44,4 +46,28 @@ body {
   --mdc-elevated-card-container-color: var(--surface-color);
   --mdc-outlined-card-container-color: var(--surface-color);
   --mdc-filled-card-container-color: var(--surface-color);
+}
+
+/* Glassmorphism card utilities - SetGraph style */
+.glass-card {
+  background: var(--card-bg-blur) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card-blue {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card-success {
+  background: var(--glass-success-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-success-border);
 }

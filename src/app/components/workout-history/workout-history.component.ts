@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
 import { DatabaseService } from '../../services/database.service';
 import { WorkoutInstance, WorkoutStats, WorkoutStatus } from '../../models/workout.models';
+import { CalendarHeatmapComponent } from '../calendar-heatmap/calendar-heatmap.component';
 
 interface WorkoutHistoryGroup {
   date: string;
@@ -26,7 +27,8 @@ interface WorkoutHistoryGroup {
     MatIconModule,
     MatChipsModule,
     MatProgressBarModule,
-    MatExpansionModule
+    MatExpansionModule,
+    CalendarHeatmapComponent
   ],
   templateUrl: './workout-history.component.html',
   styleUrls: ['./workout-history.component.scss']
@@ -38,6 +40,19 @@ export class WorkoutHistoryComponent implements OnInit {
   workoutHistory = signal<WorkoutHistoryGroup[]>([]);
   workoutStats = signal<WorkoutStats | null>(null);
   isLoading = signal(true);
+
+  // Computed property for calendar workout dates
+  workoutDates = computed(() => {
+    const dates: Date[] = [];
+    this.workoutHistory().forEach(group => {
+      group.workouts.forEach(workout => {
+        if (workout.startTime) {
+          dates.push(new Date(workout.startTime));
+        }
+      });
+    });
+    return dates;
+  });
 
   // Expose enum to template
   readonly WorkoutStatus = WorkoutStatus;

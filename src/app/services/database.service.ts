@@ -18,7 +18,7 @@ export class FitnessDatabase extends Dexie {
   constructor() {
     super('FitnessTrackerDB');
     this.version(1).stores({
-      workoutTemplates: 'id, name, category, difficulty, createdAt, isActive',
+      workoutTemplates: 'id, name, category, difficulty, createdAt',
       workoutInstances: 'id, templateId, startTime, endTime, status',
       exerciseLogs: 'exerciseId, exerciseName, date'
     });
@@ -136,12 +136,12 @@ export class DatabaseService {
 
   // Workout Template methods
   async getAllWorkoutTemplates(): Promise<WorkoutTemplate[]> {
-    const templates = await this.db.workoutTemplates
-      .where('isActive')
-      .equals(1)
-      .toArray();
-    
-    return templates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const templates = await this.db.workoutTemplates.toArray();
+
+    // Filter for active workouts in memory
+    const activeTemplates = templates.filter(t => t.isActive);
+
+    return activeTemplates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   async getWorkoutTemplate(id: string): Promise<WorkoutTemplate | undefined> {
@@ -281,9 +281,11 @@ export class DatabaseService {
       return acc;
     }, {} as Record<WorkoutCategory, number>);
 
-    const favoriteCategory = Object.entries(categoryCount).reduce((a, b) => 
-      categoryCount[a[0] as WorkoutCategory] > categoryCount[b[0] as WorkoutCategory] ? a : b
-    )[0] as WorkoutCategory || WorkoutCategory.STRENGTH;
+    const favoriteCategory = Object.entries(categoryCount).length > 0
+      ? Object.entries(categoryCount).reduce((a, b) =>
+          categoryCount[a[0] as WorkoutCategory] > categoryCount[b[0] as WorkoutCategory] ? a : b
+        )[0] as WorkoutCategory
+      : WorkoutCategory.STRENGTH;
 
     // Calculate current streak
     const currentStreak = await this.calculateCurrentStreak();

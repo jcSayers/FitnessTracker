@@ -1,0 +1,111 @@
+<div class="manage-exercises-container">
+  <div class="header">
+    <button mat-icon-button (click)="onBack()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-content">
+      <h1>{{ workoutData().name }}</h1>
+      @if (workoutData().description) {
+        <p class="subtitle">{{ workoutData().description }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="exercises-section">
+    <div class="section-header">
+      <h2>Exercises ({{ workoutData().exercises.length }})</h2>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onAddExercise()">
+        <mat-icon>add</mat-icon>
+        Add Exercise
+      </button>
+    </div>
+
+    @if (workoutData().exercises.length > 0) {
+      <div class="exercises-list">
+        @for (exercise of workoutData().exercises; track exercise.id; let i = $index) {
+          <mat-card class="exercise-card">
+            <div class="exercise-content">
+              <div class="exercise-number">{{ i + 1 }}</div>
+              <div class="exercise-info">
+                <h3>{{ exercise.name }}</h3>
+                <p class="exercise-details">{{ getExerciseDescription(exercise) }}</p>
+                @if (exercise.notes) {
+                  <p class="exercise-notes">
+                    <mat-icon>note</mat-icon>
+                    {{ exercise.notes }}
+                  </p>
+                }
+              </div>
+              <div class="exercise-actions">
+                <button
+                  mat-icon-button
+                  [disabled]="i === 0"
+                  (click)="onMoveUp(i)"
+                  matTooltip="Move up">
+                  <mat-icon>keyboard_arrow_up</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  [disabled]="i === workoutData().exercises.length - 1"
+                  (click)="onMoveDown(i)"
+                  matTooltip="Move down">
+                  <mat-icon>keyboard_arrow_down</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  (click)="onEditExercise(i)"
+                  matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="onDeleteExercise(i)"
+                  matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <mat-icon>fitness_center</mat-icon>
+        <h3>No exercises yet</h3>
+        <p>Add exercises to build your workout</p>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onAddExercise()">
+          <mat-icon>add</mat-icon>
+          Add First Exercise
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="bottom-actions">
+    <button
+      mat-button
+      (click)="onBack()">
+      Back
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="workoutData().exercises.length === 0 || isSaving()"
+      (click)="onSaveWorkout()">
+      @if (isSaving()) {
+        <mat-icon>refresh</mat-icon>
+        <span>Saving...</span>
+      } @else {
+        <mat-icon>save</mat-icon>
+        <span>Save Workout</span>
+      }
+    </button>
+  </div>
+</div>

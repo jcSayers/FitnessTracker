@@ -1,0 +1,48 @@
+<div class="calendar-heatmap">
+  <div class="calendar-legend">
+    <span class="legend-label">Less</span>
+    <div class="legend-boxes">
+      <div class="legend-box"></div>
+      <div class="legend-box intensity-low"></div>
+      <div class="legend-box intensity-medium"></div>
+      <div class="legend-box intensity-high"></div>
+    </div>
+    <span class="legend-label">More</span>
+  </div>
+
+  <div class="calendar-grid">
+    @for (month of months(); track month.year + '-' + month.month) {
+      <div class="month-container">
+        <div class="month-header">
+          <span class="month-label">{{ month.month }} {{ month.year }}</span>
+        </div>
+        <div class="month-grid">
+          <div class="weekday-labels">
+            <div class="weekday-label">S</div>
+            <div class="weekday-label">M</div>
+            <div class="weekday-label">T</div>
+            <div class="weekday-label">W</div>
+            <div class="weekday-label">T</div>
+            <div class="weekday-label">F</div>
+            <div class="weekday-label">S</div>
+          </div>
+          @for (week of month.weeks; track week) {
+            <div class="week-row">
+              @for (day of week; track day.date) {
+                <div
+                  class="day-cell"
+                  [class.has-workout]="day.hasWorkout"
+                  [class.not-current-month]="!day.isCurrentMonth"
+                  [class.is-today]="isToday(day.date)"
+                  [ngClass]="getIntensityClass(day)"
+                  [title]="day.date.toLocaleDateString() + (day.hasWorkout ? ' - ' + day.workoutCount + ' workout(s)' : '')">
+                  <span class="day-number">{{ day.date.getDate() }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

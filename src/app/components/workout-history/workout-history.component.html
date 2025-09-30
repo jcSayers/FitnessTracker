@@ -160,5 +160,13 @@
     </div>
     }
   </div>
+
+  <!-- Calendar Heatmap -->
+  @if (!isLoading() && workoutHistory().length > 0) {
+    <div class="calendar-section">
+      <h2 class="section-title">Workout Calendar</h2>
+      <app-calendar-heatmap [workoutDates]="workoutDates()"></app-calendar-heatmap>
+    </div>
+  }
   }
 </div>

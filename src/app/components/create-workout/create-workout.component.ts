@@ -1,6 +1,6 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,18 +8,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { WorkoutBuilderService } from '../../services/workout-builder.service';
 import { DatabaseService } from '../../services/database.service';
-import { 
-  WorkoutTemplate, 
-  Exercise, 
-  WorkoutCategory, 
-  DifficultyLevel, 
-  ExerciseCategory 
-} from '../../models/workout.models';
+import { WorkoutCategory, DifficultyLevel } from '../../models/workout.models';
 
 @Component({
   selector: 'app-create-workout',
@@ -32,10 +24,7 @@ import {
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule,
-    MatDividerModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatCardModule
   ],
   templateUrl: './create-workout.component.html',
   styleUrls: ['./create-workout.component.scss']
@@ -44,24 +33,18 @@ export class CreateWorkoutComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private workoutBuilder = inject(WorkoutBuilderService);
   private databaseService = inject(DatabaseService);
-  private snackBar = inject(MatSnackBar);
 
   workoutForm!: FormGroup;
-  isEditMode = signal(false);
-  isSubmitting = signal(false);
-  editWorkoutId = signal<string | null>(null);
-  isFormReady = signal(false);
 
   // Expose enums to template
   readonly WorkoutCategory = WorkoutCategory;
   readonly DifficultyLevel = DifficultyLevel;
-  readonly ExerciseCategory = ExerciseCategory;
 
   // Enum arrays for dropdowns
   readonly workoutCategories = Object.values(WorkoutCategory);
   readonly difficultyLevels = Object.values(DifficultyLevel);
-  readonly exerciseCategories = Object.values(ExerciseCategory);
 
   ngOnInit() {
     this.initializeForm();
@@ -69,28 +52,24 @@ export class CreateWorkoutComponent implements OnInit {
   }
 
   private initializeForm() {
-    this.workoutForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      description: [''],
-      category: ['', Validators.required],
-      difficulty: ['', Validators.required],
-      estimatedDuration: [30, [Validators.required, Validators.min(5), Validators.max(300)]],
-      exercises: this.fb.array([])
-    });
+    const existingData = this.workoutBuilder.getWorkoutData();
 
-    // Add initial exercise
-    this.addExercise();
-    
-    // Mark form as ready
-    this.isFormReady.set(true);
+    this.workoutForm = this.fb.group({
+      name: [existingData.name || '', [Validators.required, Validators.minLength(3)]],
+      description: [existingData.description || ''],
+      category: [existingData.category || '', Validators.required],
+      difficulty: [existingData.difficulty || '', Validators.required],
+      estimatedDuration: [existingData.estimatedDuration || 30, [Validators.required, Validators.min(5), Validators.max(300)]]
+    });
   }
 
   private async checkEditMode() {
     const editId = this.route.snapshot.queryParams['edit'];
     if (editId) {
-      this.isEditMode.set(true);
-      this.editWorkoutId.set(editId);
       await this.loadWorkoutForEdit(editId);
+    } else {
+      // Clear any existing data when creating a new workout
+      this.workoutBuilder.clearWorkoutData();
     }
   }
 
@@ -106,183 +85,75 @@ export class CreateWorkoutComponent implements OnInit {
           estimatedDuration: workout.estimatedDuration
         });
 
-        // Clear existing exercises and add the ones from the workout
-        this.exercises.clear();
-        workout.exercises.forEach(exercise => {
-          this.addExercise(exercise);
+        this.workoutBuilder.setWorkoutData({
+          id: workout.id,
+          name: workout.name,
+          description: workout.description,
+          category: workout.category,
+          difficulty: workout.difficulty,
+          estimatedDuration: workout.estimatedDuration,
+          exercises: workout.exercises,
+          isEditMode: true
         });
       }
     } catch (error) {
       console.error('Error loading workout for edit:', error);
-      this.snackBar.open('Error loading workout', 'Close', { duration: 3000 });
     }
   }
 
-  get exercises(): FormArray {
-    if (!this.workoutForm) {
-      return this.fb.array([]);
+  onNext() {
+    if (!this.workoutForm.valid) {
+      this.workoutForm.markAllAsTouched();
+      return;
     }
-    const exercisesArray = this.workoutForm.get('exercises');
-    if (!exercisesArray) {
-      return this.fb.array([]);
-    }
-    return exercisesArray as FormArray;
-  }
 
-  createExerciseFormGroup(exercise?: Exercise): FormGroup {
-    return this.fb.group({
-      id: [exercise?.id || this.generateId()],
-      name: [exercise?.name || '', [Validators.required, Validators.minLength(2)]],
-      sets: [exercise?.sets || 3, [Validators.required, Validators.min(1), Validators.max(20)]],
-      reps: [exercise?.reps || null, [Validators.min(1), Validators.max(100)]],
-      weight: [exercise?.weight || null, [Validators.min(0), Validators.max(1000)]],
-      duration: [exercise?.duration || null, [Validators.min(1), Validators.max(3600)]],
-      restTime: [exercise?.restTime || 60, [Validators.min(0), Validators.max(600)]],
-      notes: [exercise?.notes || ''],
-      category: [exercise?.category || ExerciseCategory.STRENGTH, Validators.required]
+    const formValue = this.workoutForm.value;
+    this.workoutBuilder.setWorkoutData({
+      name: formValue.name,
+      description: formValue.description,
+      category: formValue.category,
+      difficulty: formValue.difficulty,
+      estimatedDuration: formValue.estimatedDuration
     });
-  }
 
-  addExercise(exercise?: Exercise) {
-    const exerciseGroup = this.createExerciseFormGroup(exercise);
-    this.exercises.push(exerciseGroup);
-  }
-
-  removeExercise(index: number) {
-    if (this.exercises.length > 1) {
-      this.exercises.removeAt(index);
-    } else {
-      this.snackBar.open('Workout must have at least one exercise', 'Close', { duration: 3000 });
-    }
-  }
-
-  moveExerciseUp(index: number) {
-    if (index > 0) {
-      const exercise = this.exercises.at(index);
-      this.exercises.removeAt(index);
-      this.exercises.insert(index - 1, exercise);
-    }
-  }
-
-  moveExerciseDown(index: number) {
-    if (index < this.exercises.length - 1) {
-      const exercise = this.exercises.at(index);
-      this.exercises.removeAt(index);
-      this.exercises.insert(index + 1, exercise);
-    }
-  }
-
-  async onSubmit() {
-    if (this.workoutForm.valid) {
-      this.isSubmitting.set(true);
-
-      try {
-        const formValue = this.workoutForm.value;
-        const workout: WorkoutTemplate = {
-          id: this.isEditMode() ? this.editWorkoutId()! : this.generateId(),
-          name: formValue.name,
-          description: formValue.description,
-          category: formValue.category,
-          difficulty: formValue.difficulty,
-          estimatedDuration: formValue.estimatedDuration,
-          exercises: formValue.exercises,
-          createdAt: this.isEditMode() ? 
-            (await this.databaseService.getWorkoutTemplate(this.editWorkoutId()!))?.createdAt || new Date() : 
-            new Date(),
-          updatedAt: new Date(),
-          isActive: true
-        };
-
-        if (this.isEditMode()) {
-          await this.databaseService.updateWorkoutTemplate(workout);
-          this.snackBar.open('Workout updated successfully!', 'Close', { duration: 3000 });
-        } else {
-          await this.databaseService.addWorkoutTemplate(workout);
-          this.snackBar.open('Workout created successfully!', 'Close', { duration: 3000 });
-        }
-
-        this.router.navigate(['/dashboard']);
-      } catch (error) {
-        console.error('Error saving workout:', error);
-        this.snackBar.open('Error saving workout', 'Close', { duration: 3000 });
-      } finally {
-        this.isSubmitting.set(false);
-      }
-    } else {
-      this.markFormGroupTouched(this.workoutForm);
-      this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
-    }
+    this.router.navigate(['/manage-exercises']);
   }
 
   onCancel() {
+    this.workoutBuilder.clearWorkoutData();
     this.router.navigate(['/dashboard']);
   }
 
-  private markFormGroupTouched(formGroup: FormGroup) {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-
-      if (control instanceof FormGroup) {
-        this.markFormGroupTouched(control);
-      } else if (control instanceof FormArray) {
-        control.controls.forEach(ctrl => {
-          if (ctrl instanceof FormGroup) {
-            this.markFormGroupTouched(ctrl);
-          }
-        });
-      }
-    });
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.workoutForm.get(fieldName);
+    return !!(field && field.invalid && field.touched);
   }
 
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
-
-  getExerciseTypePlaceholder(category: ExerciseCategory): string {
-    switch (category) {
-      case ExerciseCategory.STRENGTH:
-        return 'e.g., Bench Press, Squats';
-      case ExerciseCategory.CARDIO:
-        return 'e.g., Running, Cycling';
-      case ExerciseCategory.FLEXIBILITY:
-        return 'e.g., Stretching, Yoga';
-      case ExerciseCategory.SPORTS:
-        return 'e.g., Basketball, Soccer';
-      default:
-        return 'Enter exercise name';
-    }
-  }
-
-  isFieldRequired(fieldName: string, exerciseIndex?: number): boolean {
-    if (exerciseIndex !== undefined) {
-      const exercise = this.exercises.at(exerciseIndex);
-      return exercise.get(fieldName)?.hasError('required') && exercise.get(fieldName)?.touched || false;
-    }
-    return this.workoutForm.get(fieldName)?.hasError('required') && this.workoutForm.get(fieldName)?.touched || false;
-  }
-
-  getFieldError(fieldName: string, exerciseIndex?: number): string {
-    let control;
-    if (exerciseIndex !== undefined) {
-      control = this.exercises.at(exerciseIndex).get(fieldName);
-    } else {
-      control = this.workoutForm.get(fieldName);
-    }
+  getFieldError(fieldName: string): string {
+    const control = this.workoutForm.get(fieldName);
 
     if (control?.hasError('required')) {
-      return `${fieldName} is required`;
+      return `${this.getFieldLabel(fieldName)} is required`;
     }
     if (control?.hasError('minlength')) {
-      return `${fieldName} is too short`;
+      return `${this.getFieldLabel(fieldName)} is too short`;
     }
     if (control?.hasError('min')) {
-      return `${fieldName} must be greater than ${control.errors?.['min'].min}`;
+      return `${this.getFieldLabel(fieldName)} must be at least ${control.errors?.['min'].min}`;
     }
     if (control?.hasError('max')) {
-      return `${fieldName} must be less than ${control.errors?.['max'].max}`;
+      return `${this.getFieldLabel(fieldName)} cannot exceed ${control.errors?.['max'].max}`;
     }
     return '';
   }
-}
 
+  private getFieldLabel(fieldName: string): string {
+    const labels: Record<string, string> = {
+      name: 'Workout name',
+      category: 'Category',
+      difficulty: 'Difficulty',
+      estimatedDuration: 'Duration'
+    };
+    return labels[fieldName] || fieldName;
+  }
+}

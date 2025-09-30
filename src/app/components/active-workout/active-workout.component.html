@@ -1,193 +1,179 @@
-<div class="active-workout-container bg-primary">
-  <!-- Header -->
+<div class="active-workout-container">
+  <!-- Header with workout timer -->
   <div class="workout-header">
     <button mat-icon-button (click)="goBack()" class="back-button">
       <mat-icon>arrow_back</mat-icon>
     </button>
 
     @if (workoutTemplate(); as template) {
-    <div class="header-info">
-      <h1 class="workout-name text-primary">{{ template.name }}</h1>
-      <div class="workout-meta text-secondary">
-        {{ template.exercises.length }} exercises • {{ template.estimatedDuration }}min
+      <div class="header-info">
+        <h1 class="workout-name">{{ template.name }}</h1>
+        <div class="workout-timer">{{ formatTime(elapsedTime()) }}</div>
       </div>
-    </div>
     }
-
-    <div class="timer-display">
-      <div class="elapsed-time text-accent">{{ formatTime(elapsedTime()) }}</div>
-      @if (isPaused()) {
-      <div class="status-badge paused">PAUSED</div>
-      } @else if (isWorkoutActive()) {
-      <div class="status-badge active">ACTIVE</div>
-      }
-    </div>
   </div>
-
-  <!-- Progress Bar -->
-  @if (isWorkoutActive()) {
-  <div class="progress-section card">
-    <div class="progress-info">
-      <span class="text-primary">Progress: {{ completedSets() }} / {{ totalSets() }} sets</span>
-      <span class="text-secondary">{{ getProgressPercentage().toFixed(0) }}%</span>
-    </div>
-    <mat-progress-bar [value]="getProgressPercentage()" mode="determinate" class="progress-bar">
-    </mat-progress-bar>
-  </div>
-  }
-
-  <!-- Rest Period -->
-  @if (isRestPeriod()) {
-  <div class="rest-period card">
-    <div class="rest-content">
-      <mat-icon class="rest-icon">timer</mat-icon>
-      <h2 class="text-primary">Rest Time</h2>
-      <div class="rest-timer text-accent">{{ formatTime(restTimeRemaining()) }}</div>
-      <button mat-button color="primary" (click)="skipRest()">
-        Skip Rest
-      </button>
-    </div>
-  </div>
-  }
 
   <!-- Pre-Workout State -->
   @if (!isWorkoutActive()) {
-  <div class="pre-workout">
-    @if (workoutTemplate(); as template) {
-    <div class="workout-preview card">
-      <h2 class="text-primary mb-4">Ready to start?</h2>
-      <div class="exercise-list">
-        @for (exercise of template.exercises; track exercise.id; let i = $index) {
-        <div class="exercise-preview">
-          <span class="exercise-number">{{ i + 1 }}</span>
-          <div class="exercise-info">
-            <div class="exercise-name text-primary">{{ exercise.name }}</div>
-            <div class="exercise-details text-secondary">
-              {{ exercise.sets }} sets
-              @if (exercise.reps) {
-              • {{ exercise.reps }} reps
-              }
-              @if (exercise.weight) {
-              • {{ exercise.weight }} lbs
-              }
-              @if (exercise.duration) {
-              • {{ exercise.duration }}s
-              }
-            </div>
+    <div class="pre-workout">
+      @if (workoutTemplate(); as template) {
+        <div class="workout-preview">
+          <h2>Ready to start?</h2>
+          <div class="exercise-list">
+            @for (exercise of template.exercises; track exercise.id; let i = $index) {
+              <div class="exercise-preview-item">
+                <div class="exercise-number">{{ i + 1 }}</div>
+                <div class="exercise-info">
+                  <div class="exercise-name">{{ exercise.name }}</div>
+                  <div class="exercise-details">
+                    {{ exercise.sets }}×{{ exercise.reps || exercise.duration + 's' }}
+                    @if (exercise.weight) {
+                      {{ exercise.weight }}lb
+                    }
+                  </div>
+                </div>
+              </div>
+            }
           </div>
+          <button mat-raised-button color="primary" class="start-button" (click)="startWorkout()">
+            <mat-icon>play_arrow</mat-icon>
+            Start Workout
+          </button>
         </div>
-        }
-      </div>
-      <button mat-raised-button color="primary" class="start-button" (click)="startWorkout()">
-        <mat-icon>play_arrow</mat-icon>
-        Start Workout
-      </button>
+      }
     </div>
-    }
-  </div>
   }
 
   <!-- Active Workout State -->
-  @if (isWorkoutActive() && !isWorkoutComplete() && !isRestPeriod()) {
-  <div class="active-exercise">
-    @if (getCurrentExercise(); as exercise) {
-    <div class="exercise-card card">
-      <div class="exercise-header">
-        <div class="exercise-title">
-          <h2 class="text-primary">{{ exercise.name }}</h2>
-          <div class="set-info text-secondary">
-            Set {{ currentSetIndex() + 1 }} of {{ exercise.sets }}
-          </div>
-        </div>
-        <mat-icon class="exercise-icon text-accent">fitness_center</mat-icon>
-      </div>
+  @if (isWorkoutActive() && !isWorkoutComplete()) {
+    <div class="active-workout-content">
+      <!-- Exercise List with Set Circles -->
+      @if (workoutTemplate(); as template) {
+        <div class="exercises-list">
+          @for (exercise of template.exercises; track exercise.id; let exerciseIndex = $index) {
+            <div class="exercise-card"
+                 [class.current]="currentExerciseIndex() === exerciseIndex">
+              <div class="exercise-header">
+                <div class="exercise-title">
+                  <div class="exercise-name">{{ exercise.name }}</div>
+                  <div class="exercise-target">
+                    {{ exercise.sets }}×{{ exercise.reps || (exercise.duration + 's') }}
+                    @if (exercise.weight) {
+                      {{ exercise.weight }}lb
+                    }
+                  </div>
+                </div>
+              </div>
 
-      @if (exercise.notes) {
-      <div class="exercise-notes">
-        <mat-icon>info</mat-icon>
-        <span>{{ exercise.notes }}</span>
-      </div>
+              <!-- Set Tracking Circles (StrongLifts style) -->
+              <div class="set-circles">
+                @for (setIndex of getExerciseSets(exercise); track setIndex) {
+                  <div class="set-circle"
+                       [class.completed]="isSetCompleted(exercise, setIndex)"
+                       [class.current]="isCurrentSet(exerciseIndex, setIndex)">
+                    {{ setIndex + 1 }}
+                  </div>
+                }
+              </div>
+
+              <!-- Current Set Input (only show for current exercise) -->
+              @if (currentExerciseIndex() === exerciseIndex && !isRestPeriod()) {
+                <div class="set-input-section">
+                  <div class="input-row">
+                    @if (exercise.reps || currentSet().reps !== undefined) {
+                      <mat-form-field appearance="outline">
+                        <mat-label>Reps</mat-label>
+                        <input matInput type="number" [(ngModel)]="currentSet().reps" min="1">
+                      </mat-form-field>
+                    }
+
+                    @if (exercise.weight || currentSet().weight !== undefined) {
+                      <mat-form-field appearance="outline">
+                        <mat-label>Weight</mat-label>
+                        <input matInput type="number" [(ngModel)]="currentSet().weight" min="0" step="5">
+                        <span matTextSuffix>lbs</span>
+                      </mat-form-field>
+                    }
+
+                    @if (exercise.duration || currentSet().duration !== undefined) {
+                      <mat-form-field appearance="outline">
+                        <mat-label>Duration</mat-label>
+                        <input matInput type="number" [(ngModel)]="currentSet().duration" min="1">
+                        <span matTextSuffix>sec</span>
+                      </mat-form-field>
+                    }
+                  </div>
+
+                  @if (exercise.notes) {
+                    <div class="exercise-notes">
+                      <mat-icon>info</mat-icon>
+                      <span>{{ exercise.notes }}</span>
+                    </div>
+                  }
+
+                  <button mat-raised-button color="primary" class="complete-set-btn" (click)="completeSet()">
+                    <mat-icon>check</mat-icon>
+                    Complete Set
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
       }
 
-      <div class="set-inputs">
-        @if (exercise.reps || currentSet().reps) {
-        <mat-form-field appearance="outline">
-          <mat-label>Reps</mat-label>
-          <input matInput type="number" [(ngModel)]="currentSet().reps" min="1">
-        </mat-form-field>
+      <!-- Rest Timer Overlay (StrongLifts style) -->
+      @if (isRestPeriod()) {
+        <div class="rest-timer-overlay">
+          <app-rest-timer
+            [restDuration]="restTimeRemaining()"
+            [autoStart]="true"
+            (timerComplete)="onRestTimerComplete()"
+            (timerDismissed)="onRestTimerDismissed()">
+          </app-rest-timer>
+        </div>
+      }
+
+      <!-- Bottom Controls -->
+      <div class="bottom-controls">
+        @if (isPaused()) {
+          <button mat-fab color="primary" (click)="resumeWorkoutFromPause()">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+        } @else {
+          <button mat-fab (click)="pauseWorkout()" class="pause-btn">
+            <mat-icon>pause</mat-icon>
+          </button>
         }
 
-        @if (exercise.weight || currentSet().weight) {
-        <mat-form-field appearance="outline">
-          <mat-label>Weight (lbs)</mat-label>
-          <input matInput type="number" [(ngModel)]="currentSet().weight" min="0" step="5">
-        </mat-form-field>
-        }
-
-        @if (exercise.duration || currentSet().duration) {
-        <mat-form-field appearance="outline">
-          <mat-label>Duration (seconds)</mat-label>
-          <input matInput type="number" [(ngModel)]="currentSet().duration" min="1">
-        </mat-form-field>
-        }
-
-        <mat-form-field appearance="outline" class="notes-field">
-          <mat-label>Notes (optional)</mat-label>
-          <input matInput [(ngModel)]="currentSet().notes" placeholder="How did this set feel?">
-        </mat-form-field>
-      </div>
-
-      <div class="set-actions">
-        <button mat-raised-button color="primary" (click)="completeSet()" class="complete-set-btn">
-          <mat-icon>check</mat-icon>
-          Complete Set
+        <button mat-fab color="warn" (click)="finishWorkout()">
+          <mat-icon>stop</mat-icon>
         </button>
       </div>
     </div>
-    }
-  </div>
   }
 
   <!-- Workout Complete State -->
   @if (isWorkoutComplete()) {
-  <div class="workout-complete card">
-    <div class="complete-content">
-      <mat-icon class="complete-icon text-accent">emoji_events</mat-icon>
-      <h2 class="text-primary">Workout Complete!</h2>
-      <div class="completion-stats">
-        <div class="stat">
-          <span class="stat-label text-secondary">Duration</span>
-          <span class="stat-value text-accent">{{ formatTime(elapsedTime()) }}</span>
+    <div class="workout-complete">
+      <div class="complete-content">
+        <mat-icon class="complete-icon">emoji_events</mat-icon>
+        <h2>Workout Complete!</h2>
+        <div class="completion-stats">
+          <div class="stat">
+            <span class="stat-label">Duration</span>
+            <span class="stat-value">{{ formatTime(elapsedTime()) }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sets Completed</span>
+            <span class="stat-value">{{ completedSets() }}</span>
+          </div>
         </div>
-        <div class="stat">
-          <span class="stat-label text-secondary">Sets Completed</span>
-          <span class="stat-value text-accent">{{ completedSets() }}</span>
-        </div>
+        <button mat-raised-button color="primary" (click)="finishWorkout()">
+          <mat-icon>done</mat-icon>
+          Finish Workout
+        </button>
       </div>
-      <button mat-raised-button color="primary" (click)="finishWorkout()">
-        <mat-icon>done</mat-icon>
-        Finish Workout
-      </button>
     </div>
-  </div>
-  }
-
-  <!-- Workout Controls -->
-  @if (isWorkoutActive() && !isWorkoutComplete()) {
-  <div class="workout-controls">
-    @if (isPaused()) {
-    <button mat-fab color="primary" (click)="resumeWorkoutFromPause()" class="control-fab">
-      <mat-icon>play_arrow</mat-icon>
-    </button>
-    } @else {
-    <button mat-fab color="accent" (click)="pauseWorkout()" class="control-fab">
-      <mat-icon>pause</mat-icon>
-    </button>
-    }
-
-    <button mat-fab color="warn" (click)="finishWorkout()" class="control-fab finish-fab">
-      <mat-icon>stop</mat-icon>
-    </button>
-  </div>
   }
 </div>

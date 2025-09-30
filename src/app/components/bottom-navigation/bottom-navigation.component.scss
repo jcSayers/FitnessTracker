@@ -3,11 +3,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--mat-toolbar-container-background-color, #ffffff);
-  border-top: 1px solid var(--mat-divider-color, #e2e8f0);
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 1000;
   padding: 8px 0;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
 
   .mat-mdc-tab-group {
     .mat-mdc-tab-header {
@@ -19,16 +21,16 @@
           min-width: 80px;
           height: 56px;
           padding: 8px 12px;
-          color: var(--mat-tab-label-text-color, #64748b);
+          color: rgba(255, 255, 255, 0.9) !important;
           font-weight: 500;
           transition: all 0.2s ease;
 
           &:hover {
-            color: var(--mat-tab-label-text-color-hover, #3b82f6);
+            color: rgba(255, 255, 255, 1) !important;
           }
 
           &.mat-mdc-tab-label-active {
-            color: var(--mat-tab-label-text-color-active, #3b82f6);
+            color: var(--primary-color) !important;
           }
 
           .mat-mdc-tab-label-content {
@@ -40,17 +42,27 @@
               font-size: 24px;
               width: 24px;
               height: 24px;
+              color: rgba(255, 255, 255, 0.9) !important;
+              transition: color 0.2s ease;
             }
+          }
 
-            .mat-mdc-badge {
-              .mat-mdc-badge-content {
-                background: var(--mat-badge-background-color, #ef4444);
-                color: var(--mat-badge-text-color, #ffffff);
-                font-size: 12px;
-                min-width: 18px;
-                height: 18px;
-                line-height: 18px;
-              }
+          &:hover .mat-mdc-tab-label-content .mat-icon {
+            color: rgba(255, 255, 255, 1) !important;
+          }
+
+          &.mat-mdc-tab-label-active .mat-mdc-tab-label-content .mat-icon {
+            color: var(--primary-color) !important;
+          }
+
+          .mat-mdc-badge {
+            .mat-mdc-badge-content {
+              background: var(--mat-badge-background-color, #ef4444);
+              color: var(--mat-badge-text-color, #ffffff);
+              font-size: 12px;
+              min-width: 18px;
+              height: 18px;
+              line-height: 18px;
             }
           }
         }
@@ -67,10 +79,3 @@
   }
 }
 
-// Dark theme support
-@media (prefers-color-scheme: dark) {
-  .bottom-navigation {
-    background: var(--mat-toolbar-container-background-color, #1e293b);
-    border-top-color: var(--mat-divider-color, #334155);
-  }
-}
