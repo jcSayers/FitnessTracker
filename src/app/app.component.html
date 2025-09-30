@@ -1,4 +1,29 @@
 <div class="app-container">
+  <header class="desktop-toolbar" *ngIf="isDesktop()">
+    <div class="toolbar-left">
+      <span class="app-title">Fitness Tracker</span>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="onExport()">
+          <mat-icon>file_download</mat-icon>
+          <span>Export Workouts</span>
+        </button>
+        <button mat-menu-item (click)="onImport()">
+          <mat-icon>file_upload</mat-icon>
+          <span>Import Workouts</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="showAbout()">
+          <mat-icon>info</mat-icon>
+          <span>About</span>
+        </button>
+      </mat-menu>
+    </div>
+  </header>
   <main class="main-content">
     <router-outlet></router-outlet>
   </main>
