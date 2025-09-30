@@ -1,4 +1,5 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
+const fs = require('fs');
 const path = require('path');
 
 const isDev = process.env.ELECTRON_START_URL || process.env.NODE_ENV === 'development';
@@ -34,6 +35,45 @@ function createWindow() {
     return { action: 'allow' };
   });
 }
+
+// IPC channels
+ipcMain.handle('app:get-env', () => ({
+  isDev,
+  platform: process.platform,
+  versions: process.versions
+}));
+
+ipcMain.handle('workout:export', async (_evt, { suggestedName, data }) => {
+  const result = await dialog.showSaveDialog({
+    title: 'Export Workout Data',
+    defaultPath: suggestedName || 'workouts-export.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (result.canceled || !result.filePath) return { canceled: true };
+  try {
+    fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf-8');
+    return { canceled: false, filePath: result.filePath };
+  } catch (err) {
+    return { canceled: false, error: err.message };
+  }
+});
+
+ipcMain.handle('workout:import', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Import Workout Data',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (result.canceled || !result.filePaths?.length) return { canceled: true };
+  try {
+    const filePath = result.filePaths[0];
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const json = JSON.parse(raw);
+    return { canceled: false, filePath, data: json };
+  } catch (err) {
+    return { canceled: false, error: err.message };
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();
