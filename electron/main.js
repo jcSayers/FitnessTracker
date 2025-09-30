@@ -1,5 +1,6 @@
 const { app, BrowserWindow, shell, ipcMain, dialog } = require('electron');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const isDev = process.env.ELECTRON_START_URL || process.env.NODE_ENV === 'development';
@@ -72,6 +73,20 @@ ipcMain.handle('workout:import', async () => {
     return { canceled: false, filePath, data: json };
   } catch (err) {
     return { canceled: false, error: err.message };
+  }
+});
+
+ipcMain.handle('data:write-backup', async (_evt, { data }) => {
+  try {
+    const userData = app.getPath('userData');
+    const backupDir = path.join(userData, 'backups');
+    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filePath = path.join(backupDir, `fitness-backup-${timestamp}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    return { success: true, filePath };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 });
 

@@ -4,6 +4,7 @@ interface DesktopApi {
   getEnv: () => Promise<{ isDev: boolean; platform: string; versions: Record<string, string>; }>;
   exportWorkouts: (suggestedName: string, data: any) => Promise<{ canceled: boolean; filePath?: string; error?: string }>;
   importWorkouts: () => Promise<{ canceled: boolean; filePath?: string; data?: any; error?: string }>;
+  writeBackup: (data: any) => Promise<{ success: boolean; filePath?: string; error?: string }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,6 +44,11 @@ export class DesktopIntegrationService {
     const res = await this.api.importWorkouts();
     if (res.canceled || res.error) return null;
     return res.data;
+  }
+
+  async writeBackup(fullData: any) {
+    if (!this.api) return { success: false, error: 'Not desktop environment' };
+    return this.api.writeBackup(fullData);
   }
 
   private importInBrowser(): Promise<any[] | null> {

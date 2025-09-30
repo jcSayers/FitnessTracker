@@ -43,8 +43,11 @@ export class AppComponent {
 
   async onExport() {
     try {
-      const data = await this.db.getAllWorkoutTemplates();
+      const data = await this.db.exportData();
       await this.desktop.exportWorkouts(data);
+      if (this.isDesktop()) {
+        await this.desktop.writeBackup(data);
+      }
       this.snackBar.open('Export complete', 'Close', { duration: 2500 });
     } catch (e) {
       this.snackBar.open('Export failed', 'Close', { duration: 3000 });
@@ -53,17 +56,33 @@ export class AppComponent {
 
   async onImport() {
     try {
-      const imported = await this.desktop.importWorkouts();
-      if (imported) {
-        // Naive merge: Add templates that don't exist yet by id
-        // If you want a more sophisticated merge, we can expand later.
-        for (const tpl of imported) {
-          if (!tpl.id) continue;
-          // Attempt to add only if not existing
-          const existing = await this.db.getWorkoutTemplate(tpl.id).catch(() => null);
-          if (!existing) {
-            await this.db.addWorkoutTemplate({ ...tpl, isActive: tpl.isActive ?? true });
+      // Safety backup before destructive import (desktop only)
+      if (this.isDesktop()) {
+        const current = await this.db.exportData();
+        await this.desktop.writeBackup(current);
+      }
+      const importedRaw: any = await this.desktop.importWorkouts();
+      if (importedRaw) {
+        // Detect structure (full export vs just templates array)
+        if (Array.isArray(importedRaw)) {
+          // Legacy simple templates array
+          for (const tpl of importedRaw) {
+            if (!tpl?.id) continue;
+            const existing = await this.db.getWorkoutTemplate(tpl.id).catch(() => null);
+            if (!existing) {
+              await this.db.addWorkoutTemplate({ ...tpl, isActive: tpl.isActive ?? true });
+            }
           }
+        } else if (importedRaw.workoutTemplates) {
+          // Full data structure
+            for (const tpl of importedRaw.workoutTemplates) {
+              if (!tpl?.id) continue;
+              const existing = await this.db.getWorkoutTemplate(tpl.id).catch(() => null);
+              if (!existing) {
+                await this.db.addWorkoutTemplate({ ...tpl, isActive: tpl.isActive ?? true });
+              }
+            }
+            // Instances & logs potential future merge
         }
         this.snackBar.open('Import complete', 'Close', { duration: 2500 });
       } else {
