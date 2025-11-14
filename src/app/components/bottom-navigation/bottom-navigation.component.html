@@ -1,26 +1,33 @@
 @if (shouldShowNavigation()) {
   <div class="bottom-navigation">
-    <mat-tab-group 
-      [selectedIndex]="activeIndex()"
-      (selectedIndexChange)="onTabChanged($event)"
-      class="nav-tabs">
+    <nav class="nav-tabs flex justify-around items-center h-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
       @for (item of navItems; track item.route; let i = $index) {
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <div class="nav-item">
-              @if (item.badge) {
-                <mat-icon [matBadge]="item.badge" matBadgeColor="accent" class="nav-icon">
-                  {{ item.icon }}
-                </mat-icon>
-              } @else {
-                <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
-              }
-              <span class="nav-label">{{ item.label }}</span>
-            </div>
-          </ng-template>
-        </mat-tab>
+        <button
+          (click)="onTabChanged(i)"
+          [class.active]="activeIndex() === i"
+          class="nav-item flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+          [class.text-blue-600]="activeIndex() === i"
+          [class.text-gray-600]="activeIndex() !== i"
+          [class.dark:text-blue-400]="activeIndex() === i"
+          [class.dark:text-gray-400]="activeIndex() !== i">
+          <div class="relative nav-icon">
+            @if (item.badge) {
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path [attr.d]="getIconPath(item.icon)"/>
+              </svg>
+              <span class="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {{ item.badge }}
+              </span>
+            } @else {
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path [attr.d]="getIconPath(item.icon)"/>
+              </svg>
+            }
+          </div>
+          <span class="nav-label text-xs mt-1">{{ item.label }}</span>
+        </button>
       }
-    </mat-tab-group>
+    </nav>
   </div>
 }
 

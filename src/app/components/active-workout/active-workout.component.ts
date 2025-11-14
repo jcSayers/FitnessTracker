@@ -2,18 +2,10 @@ import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DatabaseService } from '../../services/database.service';
 import { RestTimerComponent } from '../rest-timer/rest-timer.component';
+import { SvgIconComponent, ToastService } from '../../shared';
 import {
   WorkoutTemplate,
   WorkoutInstance,
@@ -28,15 +20,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatCheckboxModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatSnackBarModule,
+    SvgIconComponent,
     RestTimerComponent
   ],
   templateUrl: './active-workout.component.html',
@@ -46,8 +30,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private databaseService = inject(DatabaseService);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+  private toastService = inject(ToastService);
 
   workoutTemplate = signal<WorkoutTemplate | null>(null);
   workoutInstance = signal<WorkoutInstance | null>(null);
@@ -94,14 +77,14 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
         return;
       } else if (existingWorkout) {
         // Different workout is active, ask user what to do
-        this.snackBar.open('Another workout is already active', 'OK', { duration: 3000 });
+        this.toastService.info('Another workout is already active', 3000);
         this.router.navigate(['/dashboard']);
         return;
       }
 
       const template = await this.databaseService.getWorkoutTemplate(templateId);
       if (!template) {
-        this.snackBar.open('Workout not found', 'OK', { duration: 3000 });
+        this.toastService.error('Workout not found', 3000);
         this.router.navigate(['/dashboard']);
         return;
       }
@@ -111,7 +94,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.initializeCurrentSet();
     } catch (error) {
       console.error('Error loading workout:', error);
-      this.snackBar.open('Error loading workout', 'OK', { duration: 3000 });
+      this.toastService.error('Error loading workout', 3000);
     }
   }
 
@@ -119,7 +102,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     try {
       const template = await this.databaseService.getWorkoutTemplate(instance.templateId);
       if (!template) {
-        this.snackBar.open('Workout template not found', 'OK', { duration: 3000 });
+        this.toastService.error('Workout template not found', 3000);
         return;
       }
 
@@ -137,7 +120,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.findCurrentPosition();
     } catch (error) {
       console.error('Error resuming workout:', error);
-      this.snackBar.open('Error resuming workout', 'OK', { duration: 3000 });
+      this.toastService.error('Error resuming workout', 3000);
     }
   }
 
@@ -242,10 +225,10 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.isWorkoutActive.set(true);
       this.startTimer();
 
-      this.snackBar.open('Workout started!', 'OK', { duration: 2000 });
+      this.toastService.success('Workout started!', 2000);
     } catch (error) {
       console.error('Error starting workout:', error);
-      this.snackBar.open('Error starting workout', 'OK', { duration: 3000 });
+      this.toastService.error('Error starting workout', 3000);
     }
   }
 
@@ -295,7 +278,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.moveToNextSet();
     } catch (error) {
       console.error('Error completing set:', error);
-      this.snackBar.open('Error saving set', 'OK', { duration: 3000 });
+      this.toastService.error('Error saving set', 3000);
     }
   }
 
@@ -350,7 +333,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   private endRestPeriod() {
     this.isRestPeriod.set(false);
     this.stopRestTimer();
-    this.snackBar.open('Rest period finished!', 'OK', { duration: 2000 });
+    this.toastService.info('Rest period finished!', 2000);
   }
 
   skipRest() {
@@ -369,7 +352,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.stopTimer();
       this.stopRestTimer();
 
-      this.snackBar.open('Workout paused', 'OK', { duration: 2000 });
+      this.toastService.info('Workout paused', 2000);
     } catch (error) {
       console.error('Error pausing workout:', error);
     }
@@ -386,7 +369,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.isPaused.set(false);
       this.startTimer();
 
-      this.snackBar.open('Workout resumed', 'OK', { duration: 2000 });
+      this.toastService.success('Workout resumed', 2000);
     } catch (error) {
       console.error('Error resuming workout:', error);
     }
@@ -406,7 +389,7 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.stopTimer();
       this.stopRestTimer();
 
-      this.snackBar.open('Workout completed! Great job!', 'OK', { duration: 3000 });
+      this.toastService.success('Workout completed! Great job!', 3000);
       this.router.navigate(['/history']);
     } catch (error) {
       console.error('Error finishing workout:', error);

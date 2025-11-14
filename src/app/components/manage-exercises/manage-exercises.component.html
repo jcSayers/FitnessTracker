@@ -1,7 +1,7 @@
 <div class="manage-exercises-container">
   <div class="header">
-    <button mat-icon-button (click)="onBack()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+    <button (click)="onBack()" class="btn btn-icon back-button" title="Go back">
+      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
     </button>
     <div class="header-content">
       <h1>{{ workoutData().name }}</h1>
@@ -15,10 +15,9 @@
     <div class="section-header">
       <h2>Exercises ({{ workoutData().exercises.length }})</h2>
       <button
-        mat-raised-button
-        color="primary"
-        (click)="onAddExercise()">
-        <mat-icon>add</mat-icon>
+        (click)="onAddExercise()"
+        class="btn btn-primary">
+        <app-svg-icon name="add" size="md"></app-svg-icon>
         Add Exercise
       </button>
     </div>
@@ -26,7 +25,7 @@
     @if (workoutData().exercises.length > 0) {
       <div class="exercises-list">
         @for (exercise of workoutData().exercises; track exercise.id; let i = $index) {
-          <mat-card class="exercise-card">
+          <div class="exercise-card card">
             <div class="exercise-content">
               <div class="exercise-number">{{ i + 1 }}</div>
               <div class="exercise-info">
@@ -34,54 +33,54 @@
                 <p class="exercise-details">{{ getExerciseDescription(exercise) }}</p>
                 @if (exercise.notes) {
                   <p class="exercise-notes">
-                    <mat-icon>note</mat-icon>
+                    <app-svg-icon name="note" size="sm"></app-svg-icon>
                     {{ exercise.notes }}
                   </p>
                 }
               </div>
               <div class="exercise-actions">
                 <button
-                  mat-icon-button
+                  class="btn btn-icon"
                   [disabled]="i === 0"
                   (click)="onMoveUp(i)"
-                  matTooltip="Move up">
-                  <mat-icon>keyboard_arrow_up</mat-icon>
+                  title="Move up">
+                  <app-svg-icon name="arrow_upward" size="md"></app-svg-icon>
                 </button>
                 <button
-                  mat-icon-button
+                  class="btn btn-icon"
                   [disabled]="i === workoutData().exercises.length - 1"
                   (click)="onMoveDown(i)"
-                  matTooltip="Move down">
-                  <mat-icon>keyboard_arrow_down</mat-icon>
+                  title="Move down">
+                  <app-svg-icon name="arrow_downward" size="md"></app-svg-icon>
                 </button>
                 <button
-                  mat-icon-button
+                  class="btn btn-icon"
                   (click)="onEditExercise(i)"
-                  matTooltip="Edit">
-                  <mat-icon>edit</mat-icon>
+                  title="Edit">
+                  <app-svg-icon name="edit" size="md"></app-svg-icon>
                 </button>
                 <button
-                  mat-icon-button
-                  color="warn"
+                  class="btn btn-icon"
                   (click)="onDeleteExercise(i)"
-                  matTooltip="Delete">
-                  <mat-icon>delete</mat-icon>
+                  title="Delete">
+                  <app-svg-icon name="delete" size="md"></app-svg-icon>
                 </button>
               </div>
             </div>
-          </mat-card>
+          </div>
         }
       </div>
     } @else {
       <div class="empty-state">
-        <mat-icon>fitness_center</mat-icon>
+        <div class="empty-icon">
+          <app-svg-icon name="fitness_center" size="xl"></app-svg-icon>
+        </div>
         <h3>No exercises yet</h3>
         <p>Add exercises to build your workout</p>
         <button
-          mat-raised-button
-          color="primary"
-          (click)="onAddExercise()">
-          <mat-icon>add</mat-icon>
+          (click)="onAddExercise()"
+          class="btn btn-primary">
+          <app-svg-icon name="add" size="md"></app-svg-icon>
           Add First Exercise
         </button>
       </div>
@@ -90,20 +89,19 @@
 
   <div class="bottom-actions">
     <button
-      mat-button
-      (click)="onBack()">
+      (click)="onBack()"
+      class="btn btn-secondary">
       Back
     </button>
     <button
-      mat-raised-button
-      color="primary"
       [disabled]="workoutData().exercises.length === 0 || isSaving()"
-      (click)="onSaveWorkout()">
+      (click)="onSaveWorkout()"
+      class="btn btn-primary">
       @if (isSaving()) {
-        <mat-icon>refresh</mat-icon>
+        <app-svg-icon name="refresh" size="md"></app-svg-icon>
         <span>Saving...</span>
       } @else {
-        <mat-icon>save</mat-icon>
+        <app-svg-icon name="save" size="md"></app-svg-icon>
         <span>Save Workout</span>
       }
     </button>

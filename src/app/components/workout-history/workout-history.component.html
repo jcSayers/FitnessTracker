@@ -1,15 +1,15 @@
 <div class="workout-history-container bg-primary">
   <!-- Header -->
   <div class="header">
-    <button mat-icon-button (click)="goBack()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+    <button (click)="goBack()" class="back-button p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+      <svg [innerHTML]="getIconPath('arrow_back')" class="w-6 h-6 fill-current"></svg>
     </button>
     <h1 class="text-primary text-xl font-bold">Workout History</h1>
   </div>
 
   <!-- Stats Overview -->
   @if (workoutStats(); as stats) {
-  <div class="stats-overview card">
+  <div class="stats-overview glass-card">
     <h2 class="text-primary text-lg font-semibold mb-4">Your Stats</h2>
 
     <div class="stats-grid">
@@ -37,8 +37,9 @@
         <span class="text-primary font-medium">This Week</span>
         <span class="text-secondary">{{ getTotalWorkoutsThisWeek() }} / {{ stats.weeklyGoal }}</span>
       </div>
-      <mat-progress-bar [value]="getWeeklyProgress()" mode="determinate" class="progress-bar">
-      </mat-progress-bar>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div class="bg-blue-600 h-2 rounded-full transition-all" [style.width.%]="getWeeklyProgress()"></div>
+      </div>
     </div>
   </div>
   }
@@ -46,18 +47,20 @@
   <!-- Loading State -->
   @if (isLoading()) {
   <div class="loading-state">
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
+      <div class="h-full bg-blue-600 animate-pulse w-full"></div>
+    </div>
     <p class="text-secondary mt-4 text-center">Loading workout history...</p>
   </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading() && workoutHistory().length === 0) {
-  <div class="empty-state card text-center">
-    <mat-icon class="empty-icon text-secondary">history</mat-icon>
+  <div class="empty-state glass-card text-center">
+    <svg [innerHTML]="getIconPath('history')" class="empty-icon text-secondary w-16 h-16 mx-auto mb-4 fill-current"></svg>
     <h3 class="text-primary mb-2">No workout history</h3>
     <p class="text-secondary mb-4">Complete your first workout to see your history here!</p>
-    <button mat-raised-button color="primary" (click)="goBack()">
+    <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium" (click)="goBack()">
       Start Your First Workout
     </button>
   </div>
@@ -76,44 +79,39 @@
 
       <div class="workouts-list">
         @for (workout of group.workouts; track workout.id) {
-        <mat-card class="workout-card">
-          <mat-card-header>
-            <div class="workout-header">
-              <div class="workout-info">
-                <mat-card-title class="workout-title">{{ workout.templateName }}</mat-card-title>
-                <mat-card-subtitle class="workout-time">
-                  {{ formatTime(workout.startTime) }}
-                  @if (workout.totalDuration) {
-                  • {{ formatDuration(workout.totalDuration) }}
-                  }
-                </mat-card-subtitle>
-              </div>
-              <div class="status-info">
-                <mat-icon [class]="'status-icon ' + getStatusColor(workout.status)">
-                  {{ getStatusIcon(workout.status) }}
-                </mat-icon>
+        <div class="workout-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-3">
+          <div class="workout-header mb-3">
+            <div class="workout-info flex-1">
+              <h3 class="workout-title text-lg font-semibold text-gray-900 dark:text-white">{{ workout.templateName }}</h3>
+              <div class="workout-time text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {{ formatTime(workout.startTime) }}
+                @if (workout.totalDuration) {
+                • {{ formatDuration(workout.totalDuration) }}
+                }
               </div>
             </div>
-          </mat-card-header>
+            <div class="status-info">
+              <svg [innerHTML]="getIconPath(getStatusIcon(workout.status))" [class]="'status-icon w-8 h-8 fill-current ' + getStatusColor(workout.status)"></svg>
+            </div>
+          </div>
 
-          <mat-card-content>
+          <div class="mb-3">
             <!-- Progress for completed workouts -->
             @if (workout.status === WorkoutStatus.COMPLETED) {
             <div class="completion-info">
-              <div class="completion-stats">
-                <span class="stat">
-                  <mat-icon>fitness_center</mat-icon>
+              <div class="completion-stats flex gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <span class="stat flex items-center gap-1">
+                  <svg [innerHTML]="getIconPath('fitness_center')" class="w-4 h-4 fill-current"></svg>
                   {{ workout.completedExercises }} exercises
                 </span>
-                <span class="stat">
-                  <mat-icon>repeat</mat-icon>
-                  <!-- {{ workout.sets.filter(s => s.completed).length }} sets -->
+                <span class="stat flex items-center gap-1">
+                  <svg [innerHTML]="getIconPath('repeat')" class="w-4 h-4 fill-current"></svg>
                   2 sets
                 </span>
               </div>
               @if (workout.notes) {
-              <div class="workout-notes">
-                <mat-icon>note</mat-icon>
+              <div class="workout-notes flex items-start gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <svg [innerHTML]="getIconPath('note')" class="w-4 h-4 fill-current flex-shrink-0 mt-0.5"></svg>
                 <span>{{ workout.notes }}</span>
               </div>
               }
@@ -123,38 +121,39 @@
             <!-- Progress for incomplete workouts -->
             @if (workout.status !== WorkoutStatus.COMPLETED) {
             <div class="progress-info">
-              <div class="progress-text">
+              <div class="progress-text flex justify-between text-sm mb-2">
                 <span class="text-secondary">
                   {{ workout.completedExercises }} / {{ workout.totalExercises }} exercises completed
                 </span>
                 <span class="text-secondary">{{ getCompletionPercentage(workout).toFixed(0) }}%</span>
               </div>
-              <mat-progress-bar [value]="getCompletionPercentage(workout)" mode="determinate" class="workout-progress">
-              </mat-progress-bar>
+              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all" [style.width.%]="getCompletionPercentage(workout)"></div>
+              </div>
             </div>
             }
 
             <!-- Status chip -->
-            <div class="status-chip-container">
-              <mat-chip [class]="'status-chip ' + getStatusColor(workout.status)" class="status-chip">
+            <div class="status-chip-container mt-3">
+              <span [class]="'status-chip px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(workout.status)">
                 {{ workout.status | titlecase }}
-              </mat-chip>
+              </span>
             </div>
-          </mat-card-content>
+          </div>
 
-          <mat-card-actions>
+          <div class="flex gap-2">
             @if (workout.status === WorkoutStatus.IN_PROGRESS || workout.status === WorkoutStatus.PAUSED) {
-            <button mat-button color="primary" (click)="resumeWorkout(workout)">
-              <mat-icon>play_arrow</mat-icon>
+            <button class="flex items-center gap-1 px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" (click)="resumeWorkout(workout)">
+              <svg [innerHTML]="getIconPath('play_arrow')" class="w-5 h-5 fill-current"></svg>
               Resume
             </button>
             }
-            <button mat-button (click)="viewWorkoutDetails(workout)">
-              <mat-icon>visibility</mat-icon>
+            <button class="flex items-center gap-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="viewWorkoutDetails(workout)">
+              <svg [innerHTML]="getIconPath('visibility')" class="w-5 h-5 fill-current"></svg>
               Details
             </button>
-          </mat-card-actions>
-        </mat-card>
+          </div>
+        </div>
         }
       </div>
     </div>

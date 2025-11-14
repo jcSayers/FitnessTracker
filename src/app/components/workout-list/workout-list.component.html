@@ -1,8 +1,8 @@
-<div class="workout-list-container bg-primary">
+<div class="workout-list-container">
   <!-- Header with stats -->
-  <div class="stats-header card">
+  <div class="stats-header glass-card">
     <h1 class="text-primary text-2xl font-bold mb-4">Fitness Tracker</h1>
-    
+
     @if (workoutStats(); as stats) {
       <div class="stats-grid">
         <div class="stat-item">
@@ -18,40 +18,41 @@
           <div class="stat-label text-secondary">Avg Duration</div>
         </div>
       </div>
-      
+
       <!-- Weekly progress -->
       <div class="weekly-progress mt-4">
         <div class="flex justify-between items-center mb-2">
           <span class="text-primary font-medium">Weekly Goal</span>
           <span class="text-secondary">{{ stats.weeklyProgress }} / {{ stats.weeklyGoal }}</span>
         </div>
-        <mat-progress-bar 
-          [value]="getProgressPercentage()" 
-          mode="determinate"
-          class="progress-bar">
-        </mat-progress-bar>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div
+            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            [style.width.%]="getProgressPercentage()">
+          </div>
+        </div>
       </div>
     }
   </div>
 
   <!-- Quick Actions -->
-  <div class="quick-actions card">
+  <div class="quick-actions glass-card">
     <h2 class="text-primary text-lg font-semibold mb-3">Quick Actions</h2>
     <div class="action-buttons">
-      <button 
-        mat-raised-button 
-        color="primary"
-        class="action-btn"
-        (click)="viewHistory()">
-        <mat-icon>history</mat-icon>
+      <button
+        (click)="viewHistory()"
+        class="action-btn bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+        </svg>
         Workout History
       </button>
-      <button 
-        mat-raised-button 
-        color="accent"
-        class="action-btn"
-        (click)="createNewWorkout()">
-        <mat-icon>add</mat-icon>
+      <button
+        (click)="createNewWorkout()"
+        class="action-btn bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </svg>
         Create Workout
       </button>
     </div>
@@ -60,88 +61,91 @@
   <!-- Workout Templates -->
   <div class="workout-templates">
     <h2 class="text-primary text-lg font-semibold mb-4">Your Workouts</h2>
-    
+
     @if (isLoading()) {
       <div class="loading-state">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
+          <div class="bg-blue-600 h-full animate-pulse"></div>
+        </div>
         <p class="text-secondary mt-4 text-center">Loading workouts...</p>
       </div>
     } @else if (workoutTemplates().length === 0) {
-      <div class="empty-state card text-center">
-        <mat-icon class="empty-icon text-secondary">fitness_center</mat-icon>
-        <h3 class="text-primary mb-2">No workouts yet</h3>
+      <div class="empty-state glass-card text-center">
+        <svg class="empty-icon text-secondary w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
+        </svg>
+        <h3 class="text-primary mb-2 text-lg font-semibold">No workouts yet</h3>
         <p class="text-secondary mb-4">Create your first workout template to get started!</p>
-        <button mat-raised-button color="primary" (click)="createNewWorkout()">
+        <button
+          (click)="createNewWorkout()"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">
           Create Workout
         </button>
       </div>
     } @else {
       <div class="workout-grid">
         @for (workout of workoutTemplates(); track workout.id) {
-          <mat-card class="workout-card">
-            <mat-card-header>
-              <div class="workout-header">
-                <div class="workout-info">
-                  <mat-card-title class="workout-title">{{ workout.name }}</mat-card-title>
-                  <mat-card-subtitle class="workout-subtitle">
+          <div class="workout-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="p-4">
+              <div class="workout-header flex justify-between items-start mb-3">
+                <div class="workout-info flex-1">
+                  <h3 class="workout-title text-lg font-bold text-gray-900 dark:text-white mb-1">{{ workout.name }}</h3>
+                  <p class="workout-subtitle text-sm text-gray-600 dark:text-gray-400">
                     {{ workout.exercises.length }} exercises • {{ formatDuration(workout.estimatedDuration) }}
-                  </mat-card-subtitle>
+                  </p>
                 </div>
-                <mat-icon class="category-icon text-accent">
-                  {{ getCategoryIcon(workout.category) }}
-                </mat-icon>
+                <svg class="category-icon w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 24 24">
+                  <path [attr.d]="getCategoryIconPath(workout.category)"/>
+                </svg>
               </div>
-            </mat-card-header>
-            
-            <mat-card-content>
+
               @if (workout.description) {
-                <p class="workout-description text-secondary">{{ workout.description }}</p>
+                <p class="workout-description text-secondary text-sm mb-3">{{ workout.description }}</p>
               }
-              
-              <div class="workout-meta">
-                <mat-chip-set>
-                  <mat-chip 
-                    [class]="'difficulty-' + workout.difficulty"
-                    class="difficulty-chip">
-                    {{ workout.difficulty | titlecase }}
-                  </mat-chip>
-                  <mat-chip class="category-chip">
-                    {{ workout.category | titlecase }}
-                  </mat-chip>
-                </mat-chip-set>
+
+              <div class="workout-meta flex gap-2 mb-4">
+                <span
+                  [class]="'difficulty-' + workout.difficulty"
+                  class="difficulty-chip px-3 py-1 rounded-full text-xs font-medium">
+                  {{ workout.difficulty | titlecase }}
+                </span>
+                <span class="category-chip px-3 py-1 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                  {{ workout.category | titlecase }}
+                </span>
               </div>
-            </mat-card-content>
-            
-            <mat-card-actions class="workout-actions">
-              <button 
-                mat-button 
-                color="primary"
-                (click)="editWorkout(workout)">
-                <mat-icon>edit</mat-icon>
+            </div>
+
+            <div class="workout-actions flex gap-2 p-4 pt-0">
+              <button
+                (click)="editWorkout(workout)"
+                class="flex-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
                 Edit
               </button>
-              <button 
-                mat-raised-button 
-                color="primary"
-                (click)="startWorkout(workout)">
-                <mat-icon>play_arrow</mat-icon>
+              <button
+                (click)="startWorkout(workout)"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
                 Start Workout
               </button>
-            </mat-card-actions>
-          </mat-card>
+            </div>
+          </div>
         }
       </div>
     }
   </div>
 
   <!-- Floating Action Button -->
-  <button 
-    mat-fab 
-    color="accent"
-    class="fab-add"
+  <button
     (click)="createNewWorkout()"
+    class="fab-add fixed bottom-20 right-6 bg-purple-600 hover:bg-purple-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors"
     aria-label="Add new workout">
-    <mat-icon>add</mat-icon>
+    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+    </svg>
   </button>
 </div>
-

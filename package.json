@@ -15,20 +15,18 @@
     "cap:open:ios": "npx cap open ios",
     "cap:run:android": "npx cap run android",
     "cap:run:ios": "npx cap run ios",
-    "electron:serve": "concurrently \"ng serve\" \"wait-on http://localhost:4200 && electron .\"",
+    "electron:serve": "concurrently \"ng serve\" \"wait-on http://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .\"",
     "electron:build": "ng build --configuration production && electron-builder",
-    "electron:prod": "electron .",
+    "electron:prod": "ng build --configuration production && electron .",
     "postinstall": "electron-builder install-app-deps"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.0.5",
-    "@angular/cdk": "^19.0.5",
     "@angular/common": "^19.0.5",
     "@angular/compiler": "^19.0.5",
     "@angular/core": "^19.0.5",
     "@angular/forms": "^19.0.5",
-    "@angular/material": "^19.0.5",
     "@angular/platform-browser": "^19.0.5",
     "@angular/platform-browser-dynamic": "^19.0.5",
     "@angular/router": "^19.0.5",
@@ -37,10 +35,10 @@
     "@capacitor/cli": "^6.2.0",
     "@capacitor/core": "^6.2.0",
     "@capacitor/ios": "^6.2.1",
+    "better-sqlite3": "^12.4.1",
     "dexie": "^4.0.11",
     "rxjs": "~7.8.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
@@ -50,6 +48,7 @@
     "@angular/compiler-cli": "^19.0.5",
     "@types/jasmine": "~4.3.0",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3",
     "jasmine-core": "~4.6.0",
@@ -58,11 +57,10 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "wait-on": "^7.2.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.6.3"
-  }
-  ,
+    "typescript": "~5.6.3",
+    "wait-on": "^7.2.0"
+  },
   "main": "electron/main.js",
   "build": {
     "appId": "com.fitness.tracker",
@@ -76,7 +74,10 @@
       "buildResources": "build"
     },
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "build/icon.ico"
     },
     "nsis": {
@@ -85,11 +86,15 @@
       "allowToChangeInstallationDirectory": true
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "build/icon.icns"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "icon": "build"
     }
   }

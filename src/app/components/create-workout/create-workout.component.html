@@ -1,108 +1,112 @@
 <div class="create-workout-container">
   <div class="header">
-    <button mat-icon-button (click)="onCancel()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+    <button (click)="onCancel()" class="back-button p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
     </button>
     <h1>Create Workout</h1>
   </div>
 
   <form [formGroup]="workoutForm" (ngSubmit)="onNext()" class="workout-form">
-    <mat-card class="form-section">
-      <mat-card-header>
-        <mat-card-title class="section-title">
-          <mat-icon>info</mat-icon>
-          Workout Information
-        </mat-card-title>
-      </mat-card-header>
+    <div class="form-section bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4">
+      <div class="section-title flex items-center gap-2 mb-4">
+        <app-svg-icon name="info" size="md" color="primary"></app-svg-icon>
+        <h2 class="text-lg font-semibold">Workout Information</h2>
+      </div>
 
-      <mat-card-content>
+      <div>
         <!-- Workout Name -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Workout Name</mat-label>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Workout Name</label>
           <input
-            matInput
+            type="text"
             formControlName="name"
             placeholder="e.g., Upper Body Strength"
-            autocomplete="off">
+            autocomplete="off"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           @if (isFieldInvalid('name')) {
-            <mat-error>{{ getFieldError('name') }}</mat-error>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('name') }}</p>
           }
-        </mat-form-field>
+        </div>
 
         <!-- Description -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description (Optional)</mat-label>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
           <textarea
-            matInput
             formControlName="description"
             rows="3"
             placeholder="Describe your workout..."
-            autocomplete="off">
+            autocomplete="off"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none">
           </textarea>
-        </mat-form-field>
+        </div>
 
         <!-- Category and Difficulty -->
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Category</mat-label>
-            <mat-select formControlName="category">
+        <div class="form-row grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <select
+              formControlName="category"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
               @for (category of workoutCategories; track category) {
-                <mat-option [value]="category">
+                <option [value]="category">
                   {{ category | titlecase }}
-                </mat-option>
+                </option>
               }
-            </mat-select>
+            </select>
             @if (isFieldInvalid('category')) {
-              <mat-error>{{ getFieldError('category') }}</mat-error>
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('category') }}</p>
             }
-          </mat-form-field>
+          </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Difficulty</mat-label>
-            <mat-select formControlName="difficulty">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
+            <select
+              formControlName="difficulty"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
               @for (difficulty of difficultyLevels; track difficulty) {
-                <mat-option [value]="difficulty">
+                <option [value]="difficulty">
                   {{ difficulty | titlecase }}
-                </mat-option>
+                </option>
               }
-            </mat-select>
+            </select>
             @if (isFieldInvalid('difficulty')) {
-              <mat-error>{{ getFieldError('difficulty') }}</mat-error>
+              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('difficulty') }}</p>
             }
-          </mat-form-field>
+          </div>
         </div>
 
         <!-- Estimated Duration -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Estimated Duration</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="estimatedDuration"
-            min="5"
-            max="300">
-          <span matTextSuffix>minutes</span>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Duration</label>
+          <div class="relative">
+            <input
+              type="number"
+              formControlName="estimatedDuration"
+              min="5"
+              max="300"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-20">
+            <span class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400">minutes</span>
+          </div>
           @if (isFieldInvalid('estimatedDuration')) {
-            <mat-error>{{ getFieldError('estimatedDuration') }}</mat-error>
+            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('estimatedDuration') }}</p>
           }
-        </mat-form-field>
-      </mat-card-content>
-    </mat-card>
+        </div>
+      </div>
+    </div>
 
     <!-- Form Actions -->
-    <div class="form-actions">
+    <div class="form-actions flex justify-between gap-4">
       <button
         type="button"
-        mat-button
-        (click)="onCancel()">
+        (click)="onCancel()"
+        class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
         Cancel
       </button>
       <button
         type="submit"
-        mat-raised-button
-        color="primary">
+        class="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
         <span>Next: Add Exercises</span>
-        <mat-icon>arrow_forward</mat-icon>
+        <app-svg-icon name="arrow_forward" size="md"></app-svg-icon>
       </button>
     </div>
   </form>

@@ -1,8 +1,8 @@
 <div class="active-workout-container">
   <!-- Header with workout timer -->
   <div class="workout-header">
-    <button mat-icon-button (click)="goBack()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+    <button class="btn btn-icon" (click)="goBack()" title="Go back">
+      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
     </button>
 
     @if (workoutTemplate(); as template) {
@@ -35,8 +35,8 @@
               </div>
             }
           </div>
-          <button mat-raised-button color="primary" class="start-button" (click)="startWorkout()">
-            <mat-icon>play_arrow</mat-icon>
+          <button class="btn btn-primary start-button" (click)="startWorkout()">
+            <app-svg-icon name="play" size="md"></app-svg-icon>
             Start Workout
           </button>
         </div>
@@ -81,38 +81,42 @@
                 <div class="set-input-section">
                   <div class="input-row">
                     @if (exercise.reps || currentSet().reps !== undefined) {
-                      <mat-form-field appearance="outline">
-                        <mat-label>Reps</mat-label>
-                        <input matInput type="number" [(ngModel)]="currentSet().reps" min="1">
-                      </mat-form-field>
+                      <div class="form-group">
+                        <label class="label">Reps</label>
+                        <input class="custom-input" type="number" [(ngModel)]="currentSet().reps" min="1" placeholder="0">
+                      </div>
                     }
 
                     @if (exercise.weight || currentSet().weight !== undefined) {
-                      <mat-form-field appearance="outline">
-                        <mat-label>Weight</mat-label>
-                        <input matInput type="number" [(ngModel)]="currentSet().weight" min="0" step="5">
-                        <span matTextSuffix>lbs</span>
-                      </mat-form-field>
+                      <div class="form-group">
+                        <label class="label">Weight</label>
+                        <div class="input-with-suffix">
+                          <input class="custom-input" type="number" [(ngModel)]="currentSet().weight" min="0" step="5" placeholder="0">
+                          <span class="input-suffix">lbs</span>
+                        </div>
+                      </div>
                     }
 
                     @if (exercise.duration || currentSet().duration !== undefined) {
-                      <mat-form-field appearance="outline">
-                        <mat-label>Duration</mat-label>
-                        <input matInput type="number" [(ngModel)]="currentSet().duration" min="1">
-                        <span matTextSuffix>sec</span>
-                      </mat-form-field>
+                      <div class="form-group">
+                        <label class="label">Duration</label>
+                        <div class="input-with-suffix">
+                          <input class="custom-input" type="number" [(ngModel)]="currentSet().duration" min="1" placeholder="0">
+                          <span class="input-suffix">sec</span>
+                        </div>
+                      </div>
                     }
                   </div>
 
                   @if (exercise.notes) {
                     <div class="exercise-notes">
-                      <mat-icon>info</mat-icon>
+                      <app-svg-icon name="info" size="md" color="primary"></app-svg-icon>
                       <span>{{ exercise.notes }}</span>
                     </div>
                   }
 
-                  <button mat-raised-button color="primary" class="complete-set-btn" (click)="completeSet()">
-                    <mat-icon>check</mat-icon>
+                  <button class="btn btn-primary complete-set-btn" (click)="completeSet()">
+                    <app-svg-icon name="check" size="md"></app-svg-icon>
                     Complete Set
                   </button>
                 </div>
@@ -137,17 +141,17 @@
       <!-- Bottom Controls -->
       <div class="bottom-controls">
         @if (isPaused()) {
-          <button mat-fab color="primary" (click)="resumeWorkoutFromPause()">
-            <mat-icon>play_arrow</mat-icon>
+          <button class="btn btn-icon btn-primary fab" (click)="resumeWorkoutFromPause()" title="Resume workout">
+            <app-svg-icon name="play" size="lg"></app-svg-icon>
           </button>
         } @else {
-          <button mat-fab (click)="pauseWorkout()" class="pause-btn">
-            <mat-icon>pause</mat-icon>
+          <button class="btn btn-icon fab pause-btn" (click)="pauseWorkout()" title="Pause workout">
+            <app-svg-icon name="pause" size="lg"></app-svg-icon>
           </button>
         }
 
-        <button mat-fab color="warn" (click)="finishWorkout()">
-          <mat-icon>stop</mat-icon>
+        <button class="btn btn-icon btn-danger fab" (click)="finishWorkout()" title="Stop workout">
+          <app-svg-icon name="stop" size="lg"></app-svg-icon>
         </button>
       </div>
     </div>
@@ -157,7 +161,9 @@
   @if (isWorkoutComplete()) {
     <div class="workout-complete">
       <div class="complete-content">
-        <mat-icon class="complete-icon">emoji_events</mat-icon>
+        <div class="complete-icon">
+          <app-svg-icon name="check" size="xl" color="success"></app-svg-icon>
+        </div>
         <h2>Workout Complete!</h2>
         <div class="completion-stats">
           <div class="stat">
@@ -169,8 +175,8 @@
             <span class="stat-value">{{ completedSets() }}</span>
           </div>
         </div>
-        <button mat-raised-button color="primary" (click)="finishWorkout()">
-          <mat-icon>done</mat-icon>
+        <button class="btn btn-primary" (click)="finishWorkout()">
+          <app-svg-icon name="check" size="md"></app-svg-icon>
           Finish Workout
         </button>
       </div>

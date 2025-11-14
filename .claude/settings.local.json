@@ -4,7 +4,13 @@
       "Bash(npm run build:*)",
       "Bash(ng generate component:*)",
       "Bash(ng generate:*)",
-      "Read(//c/**)"
+      "Read(//c/**)",
+      "Bash(npm install)",
+      "Bash(set ELECTRON_START_URL=http://localhost:4200)",
+      "Bash(npm install:*)",
+      "Bash(test:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []

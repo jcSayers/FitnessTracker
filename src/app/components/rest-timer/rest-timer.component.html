@@ -6,16 +6,12 @@
     </div>
 
     <button
-      mat-icon-button
-      class="dismiss-button"
-      (click)="dismiss()">
-      <mat-icon>close</mat-icon>
+      class="btn btn-icon dismiss-button"
+      (click)="dismiss()"
+      title="Dismiss timer">
+      <app-svg-icon name="close" size="lg"></app-svg-icon>
     </button>
   </div>
 
-  <mat-progress-bar
-    mode="determinate"
-    [value]="progressValue()"
-    class="progress-bar">
-  </mat-progress-bar>
+  <div class="progress-bar" [style.width.%]="progressValue()"></div>
 </div>

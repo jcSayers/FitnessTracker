@@ -2,11 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 
 import { WorkoutBuilderService } from '../../services/workout-builder.service';
 import { Exercise, ExerciseCategory } from '../../models/workout.models';
@@ -16,12 +11,7 @@ import { Exercise, ExerciseCategory } from '../../models/workout.models';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule
+    ReactiveFormsModule
   ],
   templateUrl: './add-exercise.component.html',
   styleUrls: ['./add-exercise.component.scss']

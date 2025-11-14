@@ -1,17 +1,13 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { SvgIconComponent } from '../../shared';
 
 @Component({
   selector: 'app-rest-timer',
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    MatProgressBarModule
+    SvgIconComponent
   ],
   templateUrl: './rest-timer.component.html',
   styleUrls: ['./rest-timer.component.scss']
