@@ -251,7 +251,7 @@ export class SyncManagerService {
               ? `HTTP ${error.status}: ${error.error?.error || error.message}`
               : error.message;
             console.error('[SyncManager] HTTP error:', errorMsg, error);
-            return of({ success: false, message: 'Sync failed', error: errorMsg });
+            return of<SyncResponse>({ success: false, message: 'Sync failed', error: errorMsg });
           })
         )
       );
@@ -260,6 +260,17 @@ export class SyncManagerService {
 
       if (response.success) {
         console.log('[SyncManager] Batch synced successfully:', response);
+
+        // Update local database with returned UUIDs (cloudId mappings)
+        if (response.data) {
+          try {
+            await this.updateLocalWithCloudIds(response.data);
+          } catch (error) {
+            console.error('[SyncManager] Error updating local database with cloud IDs:', error);
+            // Don't fail the sync if this step fails - data is already in Supabase
+          }
+        }
+
         return true;
       } else {
         console.error('[SyncManager] Batch sync returned error:', response.error || response.message);
@@ -269,6 +280,48 @@ export class SyncManagerService {
     } catch (error) {
       console.error('[SyncManager] Batch sync error:', error);
       return false;
+    }
+  }
+
+  /**
+   * Update local database with cloud IDs returned from server
+   * Maps local IDs to the server-generated UUIDs (cloudId)
+   */
+  private async updateLocalWithCloudIds(syncData: any): Promise<void> {
+    // Process template mappings
+    if (syncData.workoutTemplates && Array.isArray(syncData.workoutTemplates)) {
+      for (const mapping of syncData.workoutTemplates) {
+        const template = await this.db.getWorkoutTemplate(mapping.localId);
+        if (template) {
+          template.cloudId = mapping.id;
+          await this.db.updateWorkoutTemplate(template);
+          console.log(`[SyncManager] Updated template ${mapping.localId} with cloudId ${mapping.id}`);
+        }
+      }
+    }
+
+    // Process instance mappings
+    if (syncData.workoutInstances && Array.isArray(syncData.workoutInstances)) {
+      for (const mapping of syncData.workoutInstances) {
+        const instance = await this.db.getWorkoutInstance(mapping.localId);
+        if (instance) {
+          instance.cloudId = mapping.id;
+          await this.db.updateWorkoutInstance(instance);
+          console.log(`[SyncManager] Updated instance ${mapping.localId} with cloudId ${mapping.id}`);
+        }
+      }
+    }
+
+    // Process log mappings
+    if (syncData.exerciseLogs && Array.isArray(syncData.exerciseLogs)) {
+      for (const mapping of syncData.exerciseLogs) {
+        const log = await this.db.getExerciseLog(mapping.localId);
+        if (log) {
+          log.cloudId = mapping.id;
+          await this.db.updateExerciseLog(log);
+          console.log(`[SyncManager] Updated log ${mapping.localId} with cloudId ${mapping.id}`);
+        }
+      }
     }
   }
 

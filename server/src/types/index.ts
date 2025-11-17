@@ -42,7 +42,8 @@ export interface Exercise {
 }
 
 export interface WorkoutTemplate {
-  id: string;
+  id: string; // Local ID (e.g., "workout-1") - stored in local_id column after sync
+  cloudId?: string; // UUID from Supabase - server assigns this, stored in id column
   userId: string;
   name: string;
   description?: string;
@@ -53,6 +54,7 @@ export interface WorkoutTemplate {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  localId?: string; // Original local ID stored in database
 }
 
 export interface WorkoutSet {
@@ -68,7 +70,8 @@ export interface WorkoutSet {
 }
 
 export interface WorkoutInstance {
-  id: string;
+  id: string; // Local ID (e.g., "instance-xyz") - stored in local_id column after sync
+  cloudId?: string; // UUID from Supabase - server assigns this, stored in id column
   userId: string;
   templateId: string;
   templateName: string;
@@ -83,10 +86,12 @@ export interface WorkoutInstance {
   totalExercises: number;
   createdAt: Date;
   updatedAt: Date;
+  localId?: string; // Original local ID stored in database
 }
 
 export interface ExerciseLog {
-  id: string;
+  id: string; // Local ID (e.g., "log-abc") - stored in local_id column after sync
+  cloudId?: string; // UUID from Supabase - server assigns this, stored in id column
   userId: string;
   exerciseId: string;
   exerciseName: string;
@@ -99,6 +104,7 @@ export interface ExerciseLog {
   };
   createdAt: Date;
   updatedAt: Date;
+  localId?: string; // Original local ID stored in database
 }
 
 export interface SyncRequest {
@@ -111,11 +117,11 @@ export interface SyncRequest {
 
 export interface SyncResponse {
   success: boolean;
-  message: string;
+  message?: string;
   data?: {
-    workoutTemplates: WorkoutTemplate[];
-    workoutInstances: WorkoutInstance[];
-    exerciseLogs: ExerciseLog[];
+    workoutTemplates?: Array<{id: string; localId: string}>;
+    workoutInstances?: Array<{id: string; localId: string}>;
+    exerciseLogs?: Array<{id: string; localId: string}>;
   };
   error?: string;
 }

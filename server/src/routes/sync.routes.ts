@@ -81,6 +81,11 @@ router.post('/sync', async (req: Request, res: Response) => {
     let syncedLogs = 0;
     const errors: string[] = [];
 
+    // Store UUID mappings for client to update local database
+    const templateMappings: Array<{id: string; localId: string}> = [];
+    const instanceMappings: Array<{id: string; localId: string}> = [];
+    const logMappings: Array<{id: string; localId: string}> = [];
+
     // Sync templates
     if (workoutTemplates && workoutTemplates.length > 0) {
       try {
@@ -95,6 +100,9 @@ router.post('/sync', async (req: Request, res: Response) => {
         const result = await syncService.syncWorkoutTemplates(resolvedUserId, templatesWithDefaults);
         if (result.success) {
           syncedTemplates = result.count;
+          if (result.data) {
+            templateMappings.push(...result.data);
+          }
           console.log('[Sync] Templates synced:', syncedTemplates);
         } else {
           errors.push(`Templates: ${result.error}`);
@@ -110,17 +118,33 @@ router.post('/sync', async (req: Request, res: Response) => {
     // Sync instances
     if (workoutInstances && workoutInstances.length > 0) {
       try {
-        const instancesWithDefaults = workoutInstances.map(i => ({
-          ...i,
-          userId: resolvedUserId,
-          createdAt: i.createdAt || new Date(),
-          updatedAt: i.updatedAt || new Date()
-        }));
+        // Map local template IDs to cloud UUIDs for foreign key references
+        const templateIdMap = new Map<string, string>();
+        for (const mapping of templateMappings) {
+          templateIdMap.set(mapping.localId, mapping.id);
+        }
+
+        const instancesWithDefaults = workoutInstances.map(i => {
+          // Replace local template ID with cloud UUID if available
+          const cloudTemplateId = i.templateId ? templateIdMap.get(i.templateId) : undefined;
+
+          return {
+            ...i,
+            templateId: cloudTemplateId || i.templateId, // Use cloud UUID if available, otherwise keep original
+            userId: resolvedUserId,
+            createdAt: i.createdAt || new Date(),
+            updatedAt: i.updatedAt || new Date()
+          };
+        });
 
         console.log('[Sync] Syncing instances:', instancesWithDefaults.length);
+        console.log('[Sync] Template ID mappings available:', templateIdMap.size);
         const result = await syncService.syncWorkoutInstances(resolvedUserId, instancesWithDefaults);
         if (result.success) {
           syncedInstances = result.count;
+          if (result.data) {
+            instanceMappings.push(...result.data);
+          }
           console.log('[Sync] Instances synced:', syncedInstances);
         } else {
           errors.push(`Instances: ${result.error}`);
@@ -148,6 +172,9 @@ router.post('/sync', async (req: Request, res: Response) => {
         const result = await syncService.syncExerciseLogs(resolvedUserId, logsWithDefaults);
         if (result.success) {
           syncedLogs = result.count;
+          if (result.data) {
+            logMappings.push(...result.data);
+          }
           console.log('[Sync] Logs synced:', syncedLogs);
         } else {
           errors.push(`Logs: ${result.error}`);
@@ -174,10 +201,10 @@ router.post('/sync', async (req: Request, res: Response) => {
       success: !hasErrors,
       message: `Synced ${syncedTemplates} templates, ${syncedInstances} instances, ${syncedLogs} logs`,
       data: {
-        workoutTemplates: workoutTemplates || [],
-        workoutInstances: workoutInstances || [],
-        exerciseLogs: exerciseLogs || []
-      }
+        workoutTemplates: templateMappings,
+        workoutInstances: instanceMappings,
+        exerciseLogs: logMappings
+      } as any
     };
 
     if (errors.length > 0) {
@@ -247,9 +274,9 @@ router.get('/sync/:userId', async (req: Request, res: Response) => {
       success: true,
       message: 'User data retrieved successfully',
       data: {
-        workoutTemplates: data.templates,
-        workoutInstances: data.instances,
-        exerciseLogs: data.logs
+        workoutTemplates: data.templates?.map(t => ({ id: t.id, localId: t.localId || '' })),
+        workoutInstances: data.instances?.map(i => ({ id: i.id, localId: i.localId || '' })),
+        exerciseLogs: data.logs?.map(l => ({ id: l.id, localId: l.localId || '' }))
       }
     };
 
