@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
-import { 
-  WorkoutTemplate, 
-  WorkoutInstance, 
-  WorkoutStats, 
+import {
+  WorkoutTemplate,
+  WorkoutInstance,
+  WorkoutStats,
   ExerciseLog,
   WorkoutStatus,
   WorkoutCategory,
-  DifficultyLevel 
+  DifficultyLevel
 } from '../models/workout.models';
+import { SyncQueueService } from './sync-queue.service';
 
 export class FitnessDatabase extends Dexie {
   workoutTemplates!: Table<WorkoutTemplate>;
@@ -31,7 +32,7 @@ export class FitnessDatabase extends Dexie {
 export class DatabaseService {
   private db = new FitnessDatabase();
 
-  constructor() {
+  constructor(private syncQueue: SyncQueueService) {
     this.initializeDatabase();
   }
 
@@ -39,14 +40,61 @@ export class DatabaseService {
     try {
       await this.db.open();
       console.log('Database initialized successfully');
-      
+
       // Add some sample data if database is empty
       const templateCount = await this.db.workoutTemplates.count();
       if (templateCount === 0) {
         await this.addSampleData();
       }
+
+      // Re-queue any existing data that hasn't been synced yet
+      await this.requeueExistingData();
     } catch (error) {
       console.error('Failed to initialize database:', error);
+    }
+  }
+
+  /**
+   * Re-queue all existing data to ensure it gets synced to Supabase
+   * This handles cases where data was created before sync queue was implemented
+   */
+  private async requeueExistingData(): Promise<void> {
+    try {
+      // Get all pending items in sync queue
+      const pendingItems = await this.syncQueue.getPendingItems();
+      const pendingIds = new Set(pendingItems.map(item => item.recordId));
+
+      // Re-queue templates that aren't already pending
+      const templates = await this.db.workoutTemplates.toArray();
+      for (const template of templates) {
+        if (!pendingIds.has(template.id)) {
+          await this.syncQueue.addToQueue('template', 'create', template.id);
+        }
+      }
+
+      // Re-queue instances that aren't already pending
+      const instances = await this.db.workoutInstances.toArray();
+      for (const instance of instances) {
+        if (!pendingIds.has(instance.id)) {
+          await this.syncQueue.addToQueue('instance', 'create', instance.id);
+        }
+      }
+
+      // Re-queue logs that aren't already pending
+      const logs = await this.db.exerciseLogs.toArray();
+      for (const log of logs) {
+        if (!pendingIds.has(log.exerciseId)) {
+          await this.syncQueue.addToQueue('log', 'create', log.exerciseId);
+        }
+      }
+
+      const totalQueued = templates.length + instances.length + logs.length;
+      if (totalQueued > 0) {
+        console.log(`[Database] Re-queued ${totalQueued} existing items for sync`);
+      }
+    } catch (error) {
+      console.error('[Database] Error re-queuing existing data:', error);
+      // Don't throw - this is a non-critical operation
     }
   }
 
@@ -149,12 +197,15 @@ export class DatabaseService {
   }
 
   async addWorkoutTemplate(template: WorkoutTemplate): Promise<string> {
-    return await this.db.workoutTemplates.add(template);
+    const id = await this.db.workoutTemplates.add(template);
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('template', 'create', template.id);
+    return id;
   }
 
   async updateWorkoutTemplate(template: WorkoutTemplate): Promise<number> {
     template.updatedAt = new Date();
-    return await this.db.workoutTemplates.update(template.id, {
+    const result = await this.db.workoutTemplates.update(template.id, {
       name: template.name,
       description: template.description,
       exercises: template.exercises,
@@ -164,10 +215,16 @@ export class DatabaseService {
       updatedAt: template.updatedAt,
       isActive: template.isActive
     });
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('template', 'update', template.id);
+    return result;
   }
 
   async deleteWorkoutTemplate(id: string): Promise<number> {
-    return await this.db.workoutTemplates.update(id, { isActive: false });
+    const result = await this.db.workoutTemplates.update(id, { isActive: false });
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('template', 'delete', id);
+    return result;
   }
 
   async searchWorkoutTemplates(searchTerm: string): Promise<WorkoutTemplate[]> {
@@ -207,11 +264,14 @@ export class DatabaseService {
   }
 
   async addWorkoutInstance(instance: WorkoutInstance): Promise<string> {
-    return await this.db.workoutInstances.add(instance);
+    const id = await this.db.workoutInstances.add(instance);
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('instance', 'create', instance.id);
+    return id;
   }
 
   async updateWorkoutInstance(instance: WorkoutInstance): Promise<number> {
-    return await this.db.workoutInstances.update(instance.id, {
+    const result = await this.db.workoutInstances.update(instance.id, {
       templateId: instance.templateId,
       templateName: instance.templateName,
       startTime: instance.startTime,
@@ -224,6 +284,9 @@ export class DatabaseService {
       completedExercises: instance.completedExercises,
       totalExercises: instance.totalExercises
     });
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('instance', 'update', instance.id);
+    return result;
   }
 
   async getWorkoutHistory(limit?: number): Promise<WorkoutInstance[]> {
@@ -250,7 +313,15 @@ export class DatabaseService {
 
   // Exercise Log methods
   async addExerciseLog(log: ExerciseLog): Promise<string> {
-    return await this.db.exerciseLogs.add(log);
+    // Generate an ID if not provided
+    const logWithId: ExerciseLog = {
+      ...log,
+      exerciseId: log.exerciseId || `log-${Date.now()}`
+    };
+    const id = await this.db.exerciseLogs.add(logWithId);
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('log', 'create', logWithId.exerciseId);
+    return id;
   }
 
   async getExerciseLog(recordId: string): Promise<ExerciseLog | undefined> {

@@ -69,9 +69,10 @@ export class AppComponent implements OnInit {
   private async initializeAutoSync(): Promise<void> {
     console.log('[AppComponent] Initializing auto-sync...');
 
-    // Configure sync manager
+    // Configure sync manager with email as user identifier
+    // Backend will automatically create/resolve user from email
     this.syncManager.configure({
-      userId: 'current-user', // TODO: Replace with actual user ID from auth service
+      userId: 'jc.sayers10@gmail.com',
       serverUrl: 'http://localhost:3000',
       maxRetries: 3,
       retryDelay: 2000,

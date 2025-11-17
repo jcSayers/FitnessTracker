@@ -58,7 +58,7 @@ export interface SyncConfig {
 export class SyncManagerService {
   private config: SyncConfig = {
     serverUrl: 'http://localhost:3000',
-    userId: 'user-default',
+    userId: 'jc.sayers10@gmail.com',
     batchSize: 100,
     maxRetries: 3,
     retryDelay: 1000,
@@ -73,11 +73,16 @@ export class SyncManagerService {
   syncError = signal<string | null>(null);
   lastSyncResult = signal<SyncResponse | null>(null);
 
+  // Track consecutive failed syncs to avoid infinite retry loops
+  private consecutiveFailures = 0;
+  private maxConsecutiveFailures = 3;
+
   // Computed signals
   shouldAutoSync = computed(() => {
     return this.connectivity.isOnline() &&
            this.syncQueue.hasPendingChanges() &&
-           !this.isSyncing();
+           !this.isSyncing() &&
+           this.consecutiveFailures < this.maxConsecutiveFailures;
   });
 
   canSync = computed(() => {
@@ -137,6 +142,14 @@ export class SyncManagerService {
       return false;
     }
 
+    if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+      const errorMsg = `Sync stopped after ${this.maxConsecutiveFailures} consecutive failures. Please check your connection or restart the app.`;
+      this.syncError.set(errorMsg);
+      this.syncMessage.set(errorMsg);
+      console.warn('[SyncManager]', errorMsg);
+      return false;
+    }
+
     this.isSyncing.set(true);
     this.syncProgress.set(0);
     this.syncMessage.set('Starting sync...');
@@ -149,6 +162,7 @@ export class SyncManagerService {
         this.syncMessage.set('No changes to sync');
         this.syncProgress.set(100);
         this.lastSyncTime.set(new Date());
+        this.consecutiveFailures = 0; // Reset on success
         return true;
       }
 
@@ -182,17 +196,25 @@ export class SyncManagerService {
         await this.syncQueue.markMultipleAsSynced(syncedIds);
       }
 
+      const allSuccess = failureCount === 0;
+      if (allSuccess) {
+        this.consecutiveFailures = 0; // Reset on complete success
+      } else {
+        this.consecutiveFailures++;
+      }
+
       this.syncProgress.set(100);
       this.lastSyncTime.set(new Date());
-      this.syncQueue.updateSyncStatus(failureCount === 0);
+      this.syncQueue.updateSyncStatus(allSuccess);
 
       const message = `Sync complete: ${successCount} synced, ${failureCount} failed`;
       this.syncMessage.set(message);
       console.log(`[SyncManager] ${message}`);
 
-      return failureCount === 0;
+      return allSuccess;
 
     } catch (error) {
+      this.consecutiveFailures++;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       this.syncError.set(errorMsg);
       this.syncQueue.updateSyncStatus(false, errorMsg);
@@ -211,6 +233,13 @@ export class SyncManagerService {
     try {
       const payload = await this.buildSyncPayload(items);
 
+      if (!payload.workoutTemplates && !payload.workoutInstances && !payload.exerciseLogs) {
+        console.log('[SyncManager] Skipping sync - no data to send');
+        return true;
+      }
+
+      console.log('[SyncManager] Sending payload:', payload);
+
       const response = await firstValueFrom(
         this.http.post<SyncResponse>(
           `${this.config.serverUrl}/api/sync`,
@@ -218,8 +247,11 @@ export class SyncManagerService {
         ).pipe(
           timeout(this.config.syncTimeout || 30000),
           catchError(error => {
-            console.error('[SyncManager] Batch sync failed:', error);
-            return of({ success: false, message: 'Sync failed', error: error.message });
+            const errorMsg = error instanceof HttpErrorResponse
+              ? `HTTP ${error.status}: ${error.error?.error || error.message}`
+              : error.message;
+            console.error('[SyncManager] HTTP error:', errorMsg, error);
+            return of({ success: false, message: 'Sync failed', error: errorMsg });
           })
         )
       );
@@ -227,10 +259,10 @@ export class SyncManagerService {
       this.lastSyncResult.set(response);
 
       if (response.success) {
-        console.log('[SyncManager] Batch synced successfully');
+        console.log('[SyncManager] Batch synced successfully:', response);
         return true;
       } else {
-        console.error('[SyncManager] Batch sync returned error:', response.error);
+        console.error('[SyncManager] Batch sync returned error:', response.error || response.message);
         return false;
       }
 
@@ -254,15 +286,19 @@ export class SyncManagerService {
         continue;
       }
 
-      if (item.dataType === 'template') {
-        const template = await this.db.getWorkoutTemplate(item.recordId);
-        if (template) templates.push(template);
-      } else if (item.dataType === 'instance') {
-        const instance = await this.db.getWorkoutInstance(item.recordId);
-        if (instance) instances.push(instance);
-      } else if (item.dataType === 'log') {
-        const log = await this.db.getExerciseLog(item.recordId);
-        if (log) logs.push(log);
+      try {
+        if (item.dataType === 'template') {
+          const template = await this.db.getWorkoutTemplate(item.recordId);
+          if (template) templates.push(this.sanitizeTemplate(template));
+        } else if (item.dataType === 'instance') {
+          const instance = await this.db.getWorkoutInstance(item.recordId);
+          if (instance) instances.push(this.sanitizeInstance(instance));
+        } else if (item.dataType === 'log') {
+          const log = await this.db.getExerciseLog(item.recordId);
+          if (log) logs.push(this.sanitizeLog(log));
+        }
+      } catch (error) {
+        console.error('[SyncManager] Error processing item:', item, error);
       }
     }
 
@@ -271,6 +307,40 @@ export class SyncManagerService {
       workoutTemplates: templates.length > 0 ? templates : undefined,
       workoutInstances: instances.length > 0 ? instances : undefined,
       exerciseLogs: logs.length > 0 ? logs : undefined
+    };
+  }
+
+  /**
+   * Sanitize template for JSON serialization
+   */
+  private sanitizeTemplate(template: WorkoutTemplate): WorkoutTemplate {
+    return {
+      ...template,
+      createdAt: template.createdAt instanceof Date ? template.createdAt : new Date(template.createdAt),
+      updatedAt: template.updatedAt instanceof Date ? template.updatedAt : new Date(template.updatedAt)
+    };
+  }
+
+  /**
+   * Sanitize instance for JSON serialization
+   */
+  private sanitizeInstance(instance: WorkoutInstance): WorkoutInstance {
+    return {
+      ...instance,
+      startTime: instance.startTime instanceof Date ? instance.startTime : new Date(instance.startTime),
+      endTime: instance.endTime
+        ? (instance.endTime instanceof Date ? instance.endTime : new Date(instance.endTime))
+        : undefined
+    };
+  }
+
+  /**
+   * Sanitize log for JSON serialization
+   */
+  private sanitizeLog(log: ExerciseLog): ExerciseLog {
+    return {
+      ...log,
+      date: log.date instanceof Date ? log.date : new Date(log.date)
     };
   }
 

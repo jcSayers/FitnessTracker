@@ -21,7 +21,7 @@ export const config = {
 
   // Validation function
   validate: () => {
-    const required = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
     const missing = required.filter(key => !process.env[key]);
 
     if (missing.length > 0) {

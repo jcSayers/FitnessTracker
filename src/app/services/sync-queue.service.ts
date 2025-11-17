@@ -76,7 +76,8 @@ export class SyncQueueService {
    * Get all pending items that need to be synced
    */
   async getPendingItems(): Promise<SyncQueueItem[]> {
-    return this.syncQueueTable.where('synced').equals(false as any).toArray();
+    const allItems = await this.syncQueueTable.toArray();
+    return allItems.filter(item => !item.synced);
   }
 
   /**
@@ -146,7 +147,11 @@ export class SyncQueueService {
    * Safe cleanup after successful sync
    */
   async clearSyncedItems(): Promise<void> {
-    await this.syncQueueTable.where('synced').equals(true as any).delete();
+    const allItems = await this.syncQueueTable.toArray();
+    const syncedIds = allItems.filter(item => item.synced).map(item => item.id!);
+    if (syncedIds.length > 0) {
+      await this.syncQueueTable.bulkDelete(syncedIds);
+    }
     await this.updateQueueStatus();
   }
 

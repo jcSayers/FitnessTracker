@@ -50,10 +50,29 @@ router.post('/sync', async (req: Request, res: Response) => {
     const syncRequest: SyncRequest = req.body;
     const { userId, workoutTemplates, workoutInstances, exerciseLogs } = syncRequest;
 
+    console.log('[Sync] Received sync request for user:', userId);
+    console.log('[Sync] Templates:', workoutTemplates?.length || 0);
+    console.log('[Sync] Instances:', workoutInstances?.length || 0);
+    console.log('[Sync] Logs:', exerciseLogs?.length || 0);
+
     if (!userId) {
       return res.status(400).json({
         success: false,
         error: 'userId is required'
+      });
+    }
+
+    // Resolve user ID (from email to UUID if needed)
+    let resolvedUserId: string;
+    try {
+      resolvedUserId = await syncService.resolveUserId(userId);
+      console.log('[Sync] Resolved user ID:', resolvedUserId);
+    } catch (error) {
+      console.error('[Sync] Error resolving user ID:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to resolve user',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
 
@@ -64,60 +83,87 @@ router.post('/sync', async (req: Request, res: Response) => {
 
     // Sync templates
     if (workoutTemplates && workoutTemplates.length > 0) {
-      const templatesWithDefaults = workoutTemplates.map(t => ({
-        ...t,
-        userId,
-        createdAt: t.createdAt || new Date(),
-        updatedAt: t.updatedAt || new Date()
-      }));
+      try {
+        const templatesWithDefaults = workoutTemplates.map(t => ({
+          ...t,
+          userId: resolvedUserId,
+          createdAt: t.createdAt || new Date(),
+          updatedAt: t.updatedAt || new Date()
+        }));
 
-      const result = await syncService.syncWorkoutTemplates(userId, templatesWithDefaults);
-      if (result.success) {
-        syncedTemplates = result.count;
-      } else {
-        errors.push(`Templates: ${result.error}`);
+        console.log('[Sync] Syncing templates:', templatesWithDefaults.length);
+        const result = await syncService.syncWorkoutTemplates(resolvedUserId, templatesWithDefaults);
+        if (result.success) {
+          syncedTemplates = result.count;
+          console.log('[Sync] Templates synced:', syncedTemplates);
+        } else {
+          errors.push(`Templates: ${result.error}`);
+          console.error('[Sync] Templates sync failed:', result.error);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Templates: ${errorMsg}`);
+        console.error('[Sync] Templates sync error:', error);
       }
     }
 
     // Sync instances
     if (workoutInstances && workoutInstances.length > 0) {
-      const instancesWithDefaults = workoutInstances.map(i => ({
-        ...i,
-        userId,
-        createdAt: i.createdAt || new Date(),
-        updatedAt: i.updatedAt || new Date()
-      }));
+      try {
+        const instancesWithDefaults = workoutInstances.map(i => ({
+          ...i,
+          userId: resolvedUserId,
+          createdAt: i.createdAt || new Date(),
+          updatedAt: i.updatedAt || new Date()
+        }));
 
-      const result = await syncService.syncWorkoutInstances(userId, instancesWithDefaults);
-      if (result.success) {
-        syncedInstances = result.count;
-      } else {
-        errors.push(`Instances: ${result.error}`);
+        console.log('[Sync] Syncing instances:', instancesWithDefaults.length);
+        const result = await syncService.syncWorkoutInstances(resolvedUserId, instancesWithDefaults);
+        if (result.success) {
+          syncedInstances = result.count;
+          console.log('[Sync] Instances synced:', syncedInstances);
+        } else {
+          errors.push(`Instances: ${result.error}`);
+          console.error('[Sync] Instances sync failed:', result.error);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Instances: ${errorMsg}`);
+        console.error('[Sync] Instances sync error:', error);
       }
     }
 
     // Sync logs
     if (exerciseLogs && exerciseLogs.length > 0) {
-      const logsWithDefaults = exerciseLogs.map(l => ({
-        ...l,
-        userId,
-        id: l.id || uuidv4(),
-        createdAt: l.createdAt || new Date(),
-        updatedAt: l.updatedAt || new Date()
-      }));
+      try {
+        const logsWithDefaults = exerciseLogs.map(l => ({
+          ...l,
+          userId: resolvedUserId,
+          id: l.id || uuidv4(),
+          createdAt: l.createdAt || new Date(),
+          updatedAt: l.updatedAt || new Date()
+        }));
 
-      const result = await syncService.syncExerciseLogs(userId, logsWithDefaults);
-      if (result.success) {
-        syncedLogs = result.count;
-      } else {
-        errors.push(`Logs: ${result.error}`);
+        console.log('[Sync] Syncing logs:', logsWithDefaults.length);
+        const result = await syncService.syncExerciseLogs(resolvedUserId, logsWithDefaults);
+        if (result.success) {
+          syncedLogs = result.count;
+          console.log('[Sync] Logs synced:', syncedLogs);
+        } else {
+          errors.push(`Logs: ${result.error}`);
+          console.error('[Sync] Logs sync failed:', result.error);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Logs: ${errorMsg}`);
+        console.error('[Sync] Logs sync error:', error);
       }
     }
 
     // Update sync status
     const hasErrors = errors.length > 0;
     await syncService.updateSyncStatus(
-      userId,
+      resolvedUserId,
       hasErrors ? 'error' : 'success',
       syncedTemplates,
       syncedInstances,
@@ -141,12 +187,15 @@ router.post('/sync', async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Sync error:', error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[Sync] Unhandled error:', error);
+    console.error('[Sync] Error stack:', errorStack);
 
     res.status(500).json({
       success: false,
       message: 'Failed to sync data',
-      error: errorMessage
+      error: errorMessage,
+      details: errorStack
     });
   }
 });
@@ -190,7 +239,9 @@ router.get('/sync/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    const data = await syncService.getUserData(userId);
+    // Resolve user ID (from email to UUID if needed)
+    const resolvedUserId = await syncService.resolveUserId(userId);
+    const data = await syncService.getUserData(resolvedUserId);
 
     const response: SyncResponse = {
       success: true,
@@ -519,11 +570,13 @@ router.get('/sync/:userId/status', async (req: Request, res: Response) => {
       });
     }
 
-    const lastSyncTime = await syncService.getLastSyncTime(userId);
+    // Resolve user ID (from email to UUID if needed)
+    const resolvedUserId = await syncService.resolveUserId(userId);
+    const lastSyncTime = await syncService.getLastSyncTime(resolvedUserId);
 
     res.json({
       success: true,
-      userId,
+      userId: resolvedUserId,
       lastSyncTime: lastSyncTime || 'Never synced'
     });
   } catch (error) {
@@ -572,12 +625,14 @@ router.delete('/sync/:userId', async (req: Request, res: Response) => {
       });
     }
 
-    const result = await syncService.deleteUserData(userId);
+    // Resolve user ID (from email to UUID if needed)
+    const resolvedUserId = await syncService.resolveUserId(userId);
+    const result = await syncService.deleteUserData(resolvedUserId);
 
     if (result.success) {
       res.json({
         success: true,
-        message: `Deleted all data for user ${userId}`
+        message: `Deleted all data for user ${resolvedUserId}`
       });
     } else {
       res.status(500).json({

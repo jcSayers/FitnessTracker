@@ -12,6 +12,148 @@ export class SyncService {
   private supabase = getSupabase();
 
   /**
+   * Helper: Convert date to ISO string, handling both Date objects and strings
+   */
+  private toISOString(date: any): string {
+    if (!date) return new Date().toISOString();
+    if (typeof date === 'string') return date;
+    if (date instanceof Date) return date.toISOString();
+    return new Date(date).toISOString();
+  }
+
+  /**
+   * Helper: Sleep for a given number of milliseconds
+   */
+  private async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Helper: Retry a function with exponential backoff
+   */
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxAttempts: number = 3,
+    baseDelayMs: number = 100
+  ): Promise<T> {
+    let lastError: any;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts) {
+          const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+          console.log(`[resolveUserId] Attempt ${attempt} failed, retrying in ${delayMs}ms...`);
+          await this.sleep(delayMs);
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  /**
+   * Resolve user ID from email or UUID
+   * Creates user if it doesn't exist (for email input)
+   */
+  async resolveUserId(userIdentifier: string): Promise<string> {
+    // Check if it's already a UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(userIdentifier)) {
+      console.log('[resolveUserId] UUID format detected:', userIdentifier);
+      return userIdentifier;
+    }
+
+    console.log('[resolveUserId] Looking up user by email:', userIdentifier);
+
+    try {
+      // Check if user exists with this email - with retry
+      let existingUsers: any[] | null = null;
+      let lookupError: any = null;
+
+      try {
+        const result = await this.retryWithBackoff(async () => {
+          const response = await this.supabase
+            .from('users')
+            .select('id, email')
+            .eq('email', userIdentifier);
+          if (response.error) throw response.error;
+          return response;
+        });
+        existingUsers = result.data;
+        lookupError = result.error;
+      } catch (error) {
+        console.error('[resolveUserId] Lookup failed after retries:', error);
+        lookupError = error;
+      }
+
+      if (!lookupError && existingUsers && existingUsers.length > 0) {
+        console.log('[resolveUserId] User found:', existingUsers[0].id);
+        return existingUsers[0].id;
+      }
+
+      // User doesn't exist or lookup failed, create one
+      console.log('[resolveUserId] Creating new user with email:', userIdentifier);
+      const newUserId = uuidv4();
+
+      let insertedUser: any[] | null = null;
+      let createError: any = null;
+
+      try {
+        const result = await this.retryWithBackoff(async () => {
+          const response = await this.supabase
+            .from('users')
+            .insert({
+              id: newUserId,
+              email: userIdentifier
+            })
+            .select('id');
+          if (response.error) throw response.error;
+          return response;
+        });
+        insertedUser = result.data;
+        createError = result.error;
+      } catch (error) {
+        console.error('[resolveUserId] Create failed after retries:', error);
+        createError = error;
+      }
+
+      if (!createError && insertedUser && insertedUser.length > 0) {
+        console.log('[resolveUserId] User created successfully:', insertedUser[0].id);
+        return insertedUser[0].id;
+      }
+
+      // User creation failed, try to fetch again in case it was created concurrently
+      if (createError) {
+        console.log('[resolveUserId] Retrying fetch after create error');
+        try {
+          const result = await this.retryWithBackoff(async () => {
+            const response = await this.supabase
+              .from('users')
+              .select('id')
+              .eq('email', userIdentifier);
+            if (response.error) throw response.error;
+            return response;
+          });
+
+          if (!result.error && result.data && result.data.length > 0) {
+            console.log('[resolveUserId] User found after retry:', result.data[0].id);
+            return result.data[0].id;
+          }
+        } catch (error) {
+          console.error('[resolveUserId] Retry fetch failed:', error);
+        }
+      }
+
+      throw new Error(`Failed to create or retrieve user: ${createError?.message || 'Unknown error'}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('[resolveUserId] Exception:', errorMsg);
+      throw error;
+    }
+  }
+
+  /**
    * Sync workout templates to Supabase
    */
   async syncWorkoutTemplates(
@@ -33,25 +175,31 @@ export class SyncService {
         difficulty: template.difficulty,
         category: template.category,
         is_active: template.isActive,
-        created_at: template.createdAt.toISOString(),
-        updated_at: template.updatedAt.toISOString()
+        created_at: this.toISOString(template.createdAt),
+        updated_at: this.toISOString(template.updatedAt)
       }));
 
+      console.log('[syncWorkoutTemplates] Upserting', data.length, 'templates');
+
       // Upsert templates (insert or update if exists)
-      const { error } = await this.supabase
+      const { data: upsertedData, error } = await this.supabase
         .from('workout_templates')
         .upsert(data, { onConflict: 'id' });
 
       if (error) {
+        console.error('[syncWorkoutTemplates] Supabase error:', error);
         throw error;
       }
+
+      console.log('[syncWorkoutTemplates] Successfully upserted', data.length, 'templates');
 
       return {
         success: true,
         count: templates.length
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('[syncWorkoutTemplates] Error:', errorMessage);
       return {
         success: false,
         count: 0,
@@ -77,8 +225,8 @@ export class SyncService {
         user_id: userId,
         template_id: instance.templateId,
         template_name: instance.templateName,
-        start_time: instance.startTime.toISOString(),
-        end_time: instance.endTime?.toISOString(),
+        start_time: this.toISOString(instance.startTime),
+        end_time: instance.endTime ? this.toISOString(instance.endTime) : undefined,
         total_duration: instance.totalDuration,
         sets: JSON.stringify(instance.sets),
         status: instance.status,
@@ -86,24 +234,30 @@ export class SyncService {
         location: instance.location,
         completed_exercises: instance.completedExercises,
         total_exercises: instance.totalExercises,
-        created_at: instance.createdAt.toISOString(),
-        updated_at: instance.updatedAt.toISOString()
+        created_at: this.toISOString(instance.createdAt),
+        updated_at: this.toISOString(instance.updatedAt)
       }));
 
-      const { error } = await this.supabase
+      console.log('[syncWorkoutInstances] Upserting', data.length, 'instances');
+
+      const { data: upsertedData, error } = await this.supabase
         .from('workout_instances')
         .upsert(data, { onConflict: 'id' });
 
       if (error) {
+        console.error('[syncWorkoutInstances] Supabase error:', error);
         throw error;
       }
+
+      console.log('[syncWorkoutInstances] Successfully upserted', data.length, 'instances');
 
       return {
         success: true,
         count: instances.length
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('[syncWorkoutInstances] Error:', errorMessage);
       return {
         success: false,
         count: 0,
@@ -129,27 +283,33 @@ export class SyncService {
         user_id: userId,
         exercise_id: log.exerciseId,
         exercise_name: log.exerciseName,
-        date: log.date.toISOString(),
+        date: this.toISOString(log.date),
         sets: JSON.stringify(log.sets),
         personal_record: log.personalRecord ? JSON.stringify(log.personalRecord) : null,
-        created_at: log.createdAt.toISOString(),
-        updated_at: log.updatedAt.toISOString()
+        created_at: this.toISOString(log.createdAt),
+        updated_at: this.toISOString(log.updatedAt)
       }));
 
-      const { error } = await this.supabase
+      console.log('[syncExerciseLogs] Upserting', data.length, 'logs');
+
+      const { data: upsertedData, error } = await this.supabase
         .from('exercise_logs')
         .upsert(data, { onConflict: 'id' });
 
       if (error) {
+        console.error('[syncExerciseLogs] Supabase error:', error);
         throw error;
       }
+
+      console.log('[syncExerciseLogs] Successfully upserted', data.length, 'logs');
 
       return {
         success: true,
         count: logs.length
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('[syncExerciseLogs] Error:', errorMessage);
       return {
         success: false,
         count: 0,

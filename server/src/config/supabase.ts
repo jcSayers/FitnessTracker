@@ -8,13 +8,14 @@ export function initializeSupabase(): SupabaseClient {
     return supabaseClient;
   }
 
-  if (!config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
-    throw new Error('Supabase configuration is missing. Check your environment variables.');
+  if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase configuration is missing. Check your environment variables (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY).');
   }
 
+  // Use service role key for server-side operations to bypass RLS policies
   supabaseClient = createClient(
     config.SUPABASE_URL,
-    config.SUPABASE_ANON_KEY
+    config.SUPABASE_SERVICE_ROLE_KEY
   );
 
   return supabaseClient;
