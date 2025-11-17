@@ -17,9 +17,15 @@
       "Bash(npm run db:generate:*)",
       "Bash(npx drizzle-kit:*)",
       "Bash(npm run db:migrate:*)",
+      "Bash(npm run db:push:*)",
       "Bash(timeout 5 npm start:*)",
       "Bash(timeout 8 npm start:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run db:pull:*)",
+      "Bash(node -e:*)",
+      "Bash(node run-migration.js:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

@@ -12,8 +12,8 @@
     "dev:watch": "concurrently \"npm run build -- --watch\" \"nodemon dist/index.js\"",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push:pg",
-    "db:pull": "drizzle-kit pull:pg",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio"
   },
   "keywords": [

@@ -155,29 +155,38 @@ export class SyncService {
 
   /**
    * Sync workout templates to Supabase
+   * Returns the synced data with server-generated UUIDs for client to store as cloudId
    */
   async syncWorkoutTemplates(
     userId: string,
     templates: WorkoutTemplate[]
-  ): Promise<{ success: boolean; count: number; error?: string }> {
+  ): Promise<{ success: boolean; count: number; data?: Array<{id: string; localId: string}>; error?: string }> {
     try {
       if (templates.length === 0) {
-        return { success: true, count: 0 };
+        return { success: true, count: 0, data: [] };
       }
 
-      const data = templates.map(template => ({
-        id: template.id,
-        user_id: userId,
-        name: template.name,
-        description: template.description,
-        exercises: JSON.stringify(template.exercises),
-        estimated_duration: template.estimatedDuration,
-        difficulty: template.difficulty,
-        category: template.category,
-        is_active: template.isActive,
-        created_at: this.toISOString(template.createdAt),
-        updated_at: this.toISOString(template.updatedAt)
-      }));
+      // Map templates with IDs
+      const mappings: Array<{id: string; localId: string}> = [];
+      const data = templates.map(template => {
+        const uuid = template.cloudId || uuidv4(); // Use cloudId if exists, otherwise generate new UUID
+        mappings.push({ id: uuid, localId: template.id });
+
+        return {
+          id: uuid,
+          local_id: template.id, // Store original local ID for client reference
+          user_id: userId,
+          name: template.name,
+          description: template.description,
+          exercises: JSON.stringify(template.exercises),
+          estimated_duration: template.estimatedDuration,
+          difficulty: template.difficulty,
+          category: template.category,
+          is_active: template.isActive,
+          created_at: this.toISOString(template.createdAt),
+          updated_at: this.toISOString(template.updatedAt)
+        };
+      });
 
       console.log('[syncWorkoutTemplates] Upserting', data.length, 'templates');
 
@@ -195,7 +204,8 @@ export class SyncService {
 
       return {
         success: true,
-        count: templates.length
+        count: templates.length,
+        data: mappings
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -210,33 +220,42 @@ export class SyncService {
 
   /**
    * Sync workout instances to Supabase
+   * Returns the synced data with server-generated UUIDs for client to store as cloudId
    */
   async syncWorkoutInstances(
     userId: string,
     instances: WorkoutInstance[]
-  ): Promise<{ success: boolean; count: number; error?: string }> {
+  ): Promise<{ success: boolean; count: number; data?: Array<{id: string; localId: string}>; error?: string }> {
     try {
       if (instances.length === 0) {
-        return { success: true, count: 0 };
+        return { success: true, count: 0, data: [] };
       }
 
-      const data = instances.map(instance => ({
-        id: instance.id,
-        user_id: userId,
-        template_id: instance.templateId,
-        template_name: instance.templateName,
-        start_time: this.toISOString(instance.startTime),
-        end_time: instance.endTime ? this.toISOString(instance.endTime) : undefined,
-        total_duration: instance.totalDuration,
-        sets: JSON.stringify(instance.sets),
-        status: instance.status,
-        notes: instance.notes,
-        location: instance.location,
-        completed_exercises: instance.completedExercises,
-        total_exercises: instance.totalExercises,
-        created_at: this.toISOString(instance.createdAt),
-        updated_at: this.toISOString(instance.updatedAt)
-      }));
+      // Map instances with IDs
+      const mappings: Array<{id: string; localId: string}> = [];
+      const data = instances.map(instance => {
+        const uuid = instance.cloudId || uuidv4(); // Use cloudId if exists, otherwise generate new UUID
+        mappings.push({ id: uuid, localId: instance.id });
+
+        return {
+          id: uuid,
+          local_id: instance.id, // Store original local ID for client reference
+          user_id: userId,
+          template_id: instance.templateId,
+          template_name: instance.templateName,
+          start_time: this.toISOString(instance.startTime),
+          end_time: instance.endTime ? this.toISOString(instance.endTime) : undefined,
+          total_duration: instance.totalDuration,
+          sets: JSON.stringify(instance.sets),
+          status: instance.status,
+          notes: instance.notes,
+          location: instance.location,
+          completed_exercises: instance.completedExercises,
+          total_exercises: instance.totalExercises,
+          created_at: this.toISOString(instance.createdAt),
+          updated_at: this.toISOString(instance.updatedAt)
+        };
+      });
 
       console.log('[syncWorkoutInstances] Upserting', data.length, 'instances');
 
@@ -253,7 +272,8 @@ export class SyncService {
 
       return {
         success: true,
-        count: instances.length
+        count: instances.length,
+        data: mappings
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -268,27 +288,36 @@ export class SyncService {
 
   /**
    * Sync exercise logs to Supabase
+   * Returns the synced data with server-generated UUIDs for client to store as cloudId
    */
   async syncExerciseLogs(
     userId: string,
     logs: ExerciseLog[]
-  ): Promise<{ success: boolean; count: number; error?: string }> {
+  ): Promise<{ success: boolean; count: number; data?: Array<{id: string; localId: string}>; error?: string }> {
     try {
       if (logs.length === 0) {
-        return { success: true, count: 0 };
+        return { success: true, count: 0, data: [] };
       }
 
-      const data = logs.map(log => ({
-        id: log.id,
-        user_id: userId,
-        exercise_id: log.exerciseId,
-        exercise_name: log.exerciseName,
-        date: this.toISOString(log.date),
-        sets: JSON.stringify(log.sets),
-        personal_record: log.personalRecord ? JSON.stringify(log.personalRecord) : null,
-        created_at: this.toISOString(log.createdAt),
-        updated_at: this.toISOString(log.updatedAt)
-      }));
+      // Map logs with IDs
+      const mappings: Array<{id: string; localId: string}> = [];
+      const data = logs.map(log => {
+        const uuid = log.cloudId || uuidv4(); // Use cloudId if exists, otherwise generate new UUID
+        mappings.push({ id: uuid, localId: log.id });
+
+        return {
+          id: uuid,
+          local_id: log.id, // Store original local ID for client reference
+          user_id: userId,
+          exercise_id: log.exerciseId,
+          exercise_name: log.exerciseName,
+          date: this.toISOString(log.date),
+          sets: JSON.stringify(log.sets),
+          personal_record: log.personalRecord ? JSON.stringify(log.personalRecord) : null,
+          created_at: this.toISOString(log.createdAt),
+          updated_at: this.toISOString(log.updatedAt)
+        };
+      });
 
       console.log('[syncExerciseLogs] Upserting', data.length, 'logs');
 
@@ -305,7 +334,8 @@ export class SyncService {
 
       return {
         success: true,
-        count: logs.length
+        count: logs.length,
+        data: mappings
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -443,7 +473,8 @@ export class SyncService {
 
   private transformTemplates(data: any[]): WorkoutTemplate[] {
     return data.map(item => ({
-      id: item.id,
+      id: item.local_id || item.id, // Use local_id if available, otherwise use UUID as fallback
+      cloudId: item.id, // Store the UUID as cloudId for future syncs
       userId: item.user_id,
       name: item.name,
       description: item.description,
@@ -459,7 +490,8 @@ export class SyncService {
 
   private transformInstances(data: any[]): WorkoutInstance[] {
     return data.map(item => ({
-      id: item.id,
+      id: item.local_id || item.id, // Use local_id if available, otherwise use UUID as fallback
+      cloudId: item.id, // Store the UUID as cloudId for future syncs
       userId: item.user_id,
       templateId: item.template_id,
       templateName: item.template_name,
@@ -479,7 +511,8 @@ export class SyncService {
 
   private transformLogs(data: any[]): ExerciseLog[] {
     return data.map(item => ({
-      id: item.id,
+      id: item.local_id || item.id, // Use local_id if available, otherwise use UUID as fallback
+      cloudId: item.id, // Store the UUID as cloudId for future syncs
       userId: item.user_id,
       exerciseId: item.exercise_id,
       exerciseName: item.exercise_name,
