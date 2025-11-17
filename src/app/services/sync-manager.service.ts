@@ -109,11 +109,18 @@ export class SyncManagerService {
    * Initialize automatic sync triggers
    */
   private initializeAutoSync(): void {
-    // Auto-sync when coming online
+    // Auto-sync when coming online (with debounce to prevent rapid retries)
+    let lastSyncAttempt = 0;
+    const syncDebounceMs = 2000; // Wait at least 2 seconds between sync attempts
+
     effect(() => {
-      if (this.connectivity.isOnline() && this.syncQueue.hasPendingChanges()) {
-        console.log('[SyncManager] Connectivity restored, attempting sync...');
-        this.syncNow();
+      if (this.connectivity.isOnline() && this.syncQueue.hasPendingChanges() && !this.isSyncing()) {
+        const now = Date.now();
+        if (now - lastSyncAttempt >= syncDebounceMs) {
+          console.log('[SyncManager] Connectivity restored, attempting sync...');
+          lastSyncAttempt = now;
+          this.syncNow();
+        }
       }
     });
 
@@ -170,8 +177,7 @@ export class SyncManagerService {
 
       // Batch items into smaller chunks
       const batches = this.createBatches(pending, this.config.batchSize || 100);
-      let successCount = 0;
-      let failureCount = 0;
+      const syncedQueueIds: number[] = [];
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -180,22 +186,21 @@ export class SyncManagerService {
 
         const batchSuccess = await this.syncBatch(batch);
         if (batchSuccess) {
-          successCount += batch.length;
-        } else {
-          failureCount += batch.length;
+          // Only mark successfully synced items (use queue item's ID, not record ID)
+          const batchQueueIds = batch
+            .map(item => item.id)
+            .filter((id): id is number => id !== undefined && id !== null);
+          syncedQueueIds.push(...batchQueueIds);
         }
       }
 
-      // Mark synced items
-      const syncedIds = pending
-        .slice(0, successCount)
-        .map(item => item.id!)
-        .filter(id => id);
-
-      if (syncedIds.length > 0) {
-        await this.syncQueue.markMultipleAsSynced(syncedIds);
+      // Mark synced items in the queue
+      if (syncedQueueIds.length > 0) {
+        await this.syncQueue.markMultipleAsSynced(syncedQueueIds);
+        console.log(`[SyncManager] Marked ${syncedQueueIds.length} items as synced`);
       }
 
+      const failureCount = pending.length - syncedQueueIds.length;
       const allSuccess = failureCount === 0;
       if (allSuccess) {
         this.consecutiveFailures = 0; // Reset on complete success
@@ -207,7 +212,7 @@ export class SyncManagerService {
       this.lastSyncTime.set(new Date());
       this.syncQueue.updateSyncStatus(allSuccess);
 
-      const message = `Sync complete: ${successCount} synced, ${failureCount} failed`;
+      const message = `Sync complete: ${syncedQueueIds.length} synced, ${failureCount} failed`;
       this.syncMessage.set(message);
       console.log(`[SyncManager] ${message}`);
 
