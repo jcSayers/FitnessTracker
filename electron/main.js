@@ -75,6 +75,25 @@ ipcMain.handle('workout:import', async () => {
     }
 });
 
+ipcMain.handle('fit:import', async () => {
+    const result = await dialog.showOpenDialog({
+        title: 'Import Garmin FIT File',
+        properties: ['openFile'],
+        filters: [
+            { name: 'FIT Files', extensions: ['fit'] },
+            { name: 'All Files', extensions: ['*'] }
+        ]
+    });
+    if (result.canceled || !result.filePaths?.length) return { canceled: true };
+    try {
+        const filePath = result.filePaths[0];
+        const buffer = fs.readFileSync(filePath);
+        return { canceled: false, filePath, buffer };
+    } catch (err) {
+        return { canceled: false, error: err.message };
+    }
+});
+
 ipcMain.handle('data:write-backup', async (_evt, { data }) => {
     try {
         const userData = app.getPath('userData');

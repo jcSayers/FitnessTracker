@@ -253,13 +253,32 @@ export class DatabaseService {
     return await this.db.exerciseLogs.add(log);
   }
 
+  async getExerciseLog(recordId: string): Promise<ExerciseLog | undefined> {
+    // Since ExerciseLogs are indexed by exerciseId, we need to search through all logs
+    const allLogs = await this.db.exerciseLogs.toArray();
+    return allLogs.find(log => log.id === recordId || log.exerciseId === recordId);
+  }
+
   async getExerciseLogs(exerciseId: string): Promise<ExerciseLog[]> {
     const logs = await this.db.exerciseLogs
       .where('exerciseId')
       .equals(exerciseId)
       .toArray();
-    
+
     return logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  // Export all data for syncing
+  async exportAllData(): Promise<{
+    templates: WorkoutTemplate[];
+    instances: WorkoutInstance[];
+    logs: ExerciseLog[];
+  }> {
+    return {
+      templates: await this.db.workoutTemplates.toArray(),
+      instances: await this.db.workoutInstances.toArray(),
+      logs: await this.db.exerciseLogs.toArray()
+    };
   }
 
   // Statistics methods

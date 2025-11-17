@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('desktop', {
     getEnv: () => ipcRenderer.invoke('app:get-env'),
     exportWorkouts: (suggestedName, data) => ipcRenderer.invoke('workout:export', { suggestedName, data }),
     importWorkouts: () => ipcRenderer.invoke('workout:import'),
+    importGarminFit: () => ipcRenderer.invoke('fit:import'),
     writeBackup: (data) => ipcRenderer.invoke('data:write-backup', { data })
 });
 

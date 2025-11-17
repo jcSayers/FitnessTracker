@@ -10,7 +10,16 @@
       "Bash(npm install:*)",
       "Bash(test:*)",
       "Bash(npm uninstall:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(nul)",
+      "Bash(npm run db:generate:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(timeout 5 npm start:*)",
+      "Bash(timeout 8 npm start:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

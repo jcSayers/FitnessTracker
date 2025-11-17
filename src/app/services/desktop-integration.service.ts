@@ -4,6 +4,7 @@ interface DesktopApi {
     getEnv: () => Promise<{ isDev: boolean; platform: string; versions: Record<string, string>; }>;
     exportWorkouts: (suggestedName: string, data: any) => Promise<{ canceled: boolean; filePath?: string; error?: string }>;
     importWorkouts: () => Promise<{ canceled: boolean; filePath?: string; data?: any; error?: string }>;
+    importGarminFit: () => Promise<{ canceled: boolean; filePath?: string; buffer?: ArrayBuffer; error?: string }>;
     writeBackup: (data: any) => Promise<{ success: boolean; filePath?: string; error?: string }>;
 }
 
@@ -46,6 +47,15 @@ export class DesktopIntegrationService {
         return res.data;
     }
 
+    async importGarminFit(): Promise<ArrayBuffer | null> {
+        if (!this.api) {
+            return this.importGarminFitInBrowser();
+        }
+        const res = await this.api.importGarminFit();
+        if (res.canceled || res.error) return null;
+        return res.buffer || null;
+    }
+
     async writeBackup(fullData: any) {
         if (!this.api) return { success: false, error: 'Not desktop environment' };
         return this.api.writeBackup(fullData);
@@ -69,6 +79,24 @@ export class DesktopIntegrationService {
                     }
                 };
                 reader.readAsText(file);
+            };
+            input.click();
+        });
+    }
+
+    private importGarminFitInBrowser(): Promise<ArrayBuffer | null> {
+        return new Promise(resolve => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.fit';
+            input.onchange = () => {
+                const file = input.files?.[0];
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    resolve(reader.result as ArrayBuffer);
+                };
+                reader.readAsArrayBuffer(file);
             };
             input.click();
         });

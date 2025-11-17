@@ -1,9 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BottomNavigationComponent } from './components/bottom-navigation/bottom-navigation.component';
 import { CommonModule } from '@angular/common';
 import { DesktopIntegrationService } from './services/desktop-integration.service';
 import { DatabaseService } from './services/database.service';
+import { SyncManagerService } from './services/sync-manager.service';
+import { ConnectivityService } from './services/connectivity.service';
+import { SyncQueueService } from './services/sync-queue.service';
 
 @Component({
   selector: 'app-root',
@@ -16,19 +19,97 @@ import { DatabaseService } from './services/database.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Fitness Tracker';
   private desktop = inject(DesktopIntegrationService);
   private db = inject(DatabaseService);
+  private syncManager = inject(SyncManagerService);
+  private connectivity = inject(ConnectivityService);
+  private syncQueue = inject(SyncQueueService);
 
   isDesktop = signal(this.desktop.isDesktop());
   envInfo = signal<any | null>(null);
   menuOpen = false;
 
+  // Sync status signals
+  isSyncing = signal(false);
+  syncStatus = signal<string>('');
+  isOnline = signal(navigator.onLine);
+  hasPendingSync = signal(false);
+
   constructor() {
     if (this.isDesktop()) {
       this.desktop.getEnv().then(env => this.envInfo.set(env));
     }
+
+    // Subscribe to sync state changes
+    effect(() => {
+      this.isSyncing.set(this.syncManager.isSyncing());
+      this.syncStatus.set(this.syncManager.syncMessage());
+    });
+
+    // Subscribe to connectivity changes
+    effect(() => {
+      this.isOnline.set(this.connectivity.isOnline());
+    });
+
+    // Subscribe to pending sync changes
+    effect(() => {
+      this.hasPendingSync.set(this.syncQueue.hasPendingChanges());
+    });
+  }
+
+  ngOnInit(): void {
+    this.initializeAutoSync();
+  }
+
+  /**
+   * Initialize automatic syncing on app load
+   */
+  private async initializeAutoSync(): Promise<void> {
+    console.log('[AppComponent] Initializing auto-sync...');
+
+    // Configure sync manager
+    this.syncManager.configure({
+      userId: 'current-user', // TODO: Replace with actual user ID from auth service
+      serverUrl: 'http://localhost:3000',
+      maxRetries: 3,
+      retryDelay: 2000,
+      syncTimeout: 30000
+    });
+
+    // Wait a moment for app to fully initialize
+    await this.delay(1000);
+
+    // Check connectivity and sync if online
+    if (this.connectivity.isOnline()) {
+      console.log('[AppComponent] Online detected, attempting initial sync...');
+      await this.syncManager.syncNow();
+    } else {
+      console.log('[AppComponent] Offline, skipping initial sync');
+    }
+
+    // Log sync status for debugging
+    const status = this.syncManager.getStatus();
+    console.log('[AppComponent] Auto-sync initialized:', status);
+  }
+
+  /**
+   * Helper to delay execution
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Manual trigger for sync (can be called from UI)
+   */
+  async manualSync(): Promise<void> {
+    if (!this.connectivity.isOnline()) {
+      this.showNotification('Cannot sync - offline');
+      return;
+    }
+    await this.syncManager.syncNow();
   }
 
   toggleMenu() {
