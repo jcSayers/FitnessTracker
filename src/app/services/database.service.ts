@@ -56,7 +56,7 @@ export class DatabaseService {
 
   /**
    * Re-queue all existing data to ensure it gets synced to Supabase
-   * This handles cases where data was created before sync queue was implemented
+   * Only re-queues items that haven't been synced yet
    */
   private async requeueExistingData(): Promise<void> {
     try {
@@ -64,33 +64,37 @@ export class DatabaseService {
       const pendingItems = await this.syncQueue.getPendingItems();
       const pendingIds = new Set(pendingItems.map(item => item.recordId));
 
-      // Re-queue templates that aren't already pending
+      let queuedCount = 0;
+
+      // Re-queue templates that aren't already pending and haven't been synced
       const templates = await this.db.workoutTemplates.toArray();
       for (const template of templates) {
-        if (!pendingIds.has(template.id)) {
+        if (!pendingIds.has(template.id) && !template.synced) {
           await this.syncQueue.addToQueue('template', 'create', template.id);
+          queuedCount++;
         }
       }
 
-      // Re-queue instances that aren't already pending
+      // Re-queue instances that aren't already pending and haven't been synced
       const instances = await this.db.workoutInstances.toArray();
       for (const instance of instances) {
-        if (!pendingIds.has(instance.id)) {
+        if (!pendingIds.has(instance.id) && !instance.synced) {
           await this.syncQueue.addToQueue('instance', 'create', instance.id);
+          queuedCount++;
         }
       }
 
-      // Re-queue logs that aren't already pending
+      // Re-queue logs that aren't already pending and haven't been synced
       const logs = await this.db.exerciseLogs.toArray();
       for (const log of logs) {
-        if (!pendingIds.has(log.exerciseId)) {
+        if (!pendingIds.has(log.exerciseId) && !log.synced) {
           await this.syncQueue.addToQueue('log', 'create', log.exerciseId);
+          queuedCount++;
         }
       }
 
-      const totalQueued = templates.length + instances.length + logs.length;
-      if (totalQueued > 0) {
-        console.log(`[Database] Re-queued ${totalQueued} existing items for sync`);
+      if (queuedCount > 0) {
+        console.log(`[Database] Re-queued ${queuedCount} unsynced items for sync`);
       }
     } catch (error) {
       console.error('[Database] Error re-queuing existing data:', error);
@@ -337,6 +341,20 @@ export class DatabaseService {
       .toArray();
 
     return logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  async updateExerciseLog(log: ExerciseLog): Promise<number> {
+    const result = await this.db.exerciseLogs.update(log.id, {
+      exerciseName: log.exerciseName,
+      date: log.date,
+      sets: log.sets,
+      personalRecord: log.personalRecord,
+      cloudId: log.cloudId,
+      updatedAt: new Date()
+    });
+    // Add to sync queue for remote sync
+    await this.syncQueue.addToQueue('log', 'update', log.id);
+    return result;
   }
 
   // Export all data for syncing

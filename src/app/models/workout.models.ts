@@ -20,7 +20,8 @@ export enum ExerciseCategory {
 }
 
 export interface WorkoutTemplate {
-  id: string;
+  id: string; // Local ID
+  cloudId?: string; // UUID from Supabase
   name: string;
   description?: string;
   exercises: Exercise[];
@@ -30,6 +31,7 @@ export interface WorkoutTemplate {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  synced?: boolean; // Whether this item has been synced to Supabase
 }
 
 export enum DifficultyLevel {
@@ -60,7 +62,8 @@ export interface WorkoutSet {
 }
 
 export interface WorkoutInstance {
-  id: string;
+  id: string; // Local ID
+  cloudId?: string; // UUID from Supabase
   templateId: string;
   templateName: string;
   startTime: Date;
@@ -72,6 +75,9 @@ export interface WorkoutInstance {
   location?: string;
   completedExercises: number;
   totalExercises: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  synced?: boolean; // Whether this item has been synced to Supabase
 }
 
 export enum WorkoutStatus {
@@ -105,6 +111,8 @@ export interface WorkoutFilter {
 }
 
 export interface ExerciseLog {
+  id: string; // Local ID
+  cloudId?: string; // UUID from Supabase
   exerciseId: string;
   exerciseName: string;
   date: Date;
@@ -114,5 +122,8 @@ export interface ExerciseLog {
     reps?: number;
     duration?: number;
   };
+  createdAt: Date;
+  updatedAt: Date;
+  synced?: boolean; // Whether this item has been synced to Supabase
 }
 

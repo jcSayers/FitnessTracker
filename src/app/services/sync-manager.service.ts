@@ -178,6 +178,7 @@ export class SyncManagerService {
       // Batch items into smaller chunks
       const batches = this.createBatches(pending, this.config.batchSize || 100);
       const syncedQueueIds: number[] = [];
+      const syncedRecordIds: { type: 'template' | 'instance' | 'log'; id: string }[] = [];
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -191,13 +192,23 @@ export class SyncManagerService {
             .map(item => item.id)
             .filter((id): id is number => id !== undefined && id !== null);
           syncedQueueIds.push(...batchQueueIds);
+
+          // Track which records were synced for updating the main database
+          for (const item of batch) {
+            syncedRecordIds.push({ type: item.dataType, id: item.recordId });
+          }
         }
       }
 
       // Mark synced items in the queue
       if (syncedQueueIds.length > 0) {
         await this.syncQueue.markMultipleAsSynced(syncedQueueIds);
-        console.log(`[SyncManager] Marked ${syncedQueueIds.length} items as synced`);
+        console.log(`[SyncManager] Marked ${syncedQueueIds.length} items as synced in queue`);
+      }
+
+      // Mark synced items in the main database
+      if (syncedRecordIds.length > 0) {
+        await this.markRecordsAsSynced(syncedRecordIds);
       }
 
       const failureCount = pending.length - syncedQueueIds.length;
@@ -328,6 +339,39 @@ export class SyncManagerService {
         }
       }
     }
+  }
+
+  /**
+   * Mark records as synced in the main database
+   * Prevents them from being re-queued on page reload
+   */
+  private async markRecordsAsSynced(records: { type: 'template' | 'instance' | 'log'; id: string }[]): Promise<void> {
+    for (const record of records) {
+      try {
+        if (record.type === 'template') {
+          const template = await this.db.getWorkoutTemplate(record.id);
+          if (template) {
+            template.synced = true;
+            await this.db.updateWorkoutTemplate(template);
+          }
+        } else if (record.type === 'instance') {
+          const instance = await this.db.getWorkoutInstance(record.id);
+          if (instance) {
+            instance.synced = true;
+            await this.db.updateWorkoutInstance(instance);
+          }
+        } else if (record.type === 'log') {
+          const log = await this.db.getExerciseLog(record.id);
+          if (log) {
+            log.synced = true;
+            await this.db.updateExerciseLog(log);
+          }
+        }
+      } catch (error) {
+        console.error(`[SyncManager] Error marking ${record.type} ${record.id} as synced:`, error);
+      }
+    }
+    console.log(`[SyncManager] Marked ${records.length} records as synced in main database`);
   }
 
   /**
