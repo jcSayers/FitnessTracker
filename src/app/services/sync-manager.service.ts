@@ -215,6 +215,9 @@ export class SyncManagerService {
       const allSuccess = failureCount === 0;
       if (allSuccess) {
         this.consecutiveFailures = 0; // Reset on complete success
+        // Clear synced items from queue to prevent re-triggering
+        await this.syncQueue.clearSyncedItems();
+        console.log('[SyncManager] Cleared synced items from queue');
       } else {
         this.consecutiveFailures++;
       }
