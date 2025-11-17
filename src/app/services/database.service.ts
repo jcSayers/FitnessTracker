@@ -487,11 +487,6 @@ export class DatabaseService {
   }
 
   // Utility methods
-  async clearAllData(): Promise<void> {
-    await this.db.workoutTemplates.clear();
-    await this.db.workoutInstances.clear();
-    await this.db.exerciseLogs.clear();
-  }
 
   async exportData(): Promise<any> {
     return {
@@ -510,6 +505,31 @@ export class DatabaseService {
     }
     if (data.exerciseLogs) {
       await this.db.exerciseLogs.bulkAdd(data.exerciseLogs);
+    }
+  }
+
+  /**
+   * Clear all local data and sync queue
+   * WARNING: This deletes all offline data - use only when needed to reset state
+   */
+  async clearAllData(): Promise<void> {
+    console.warn('[Database] Clearing all local data and sync queue');
+
+    try {
+      // Clear all tables in main database
+      await this.db.workoutTemplates.clear();
+      await this.db.workoutInstances.clear();
+      await this.db.exerciseLogs.clear();
+      console.log('[Database] Cleared all local data');
+
+      // Clear sync queue
+      await this.syncQueue.clearAll();
+      console.log('[Database] Cleared sync queue');
+
+      console.log('[Database] ✅ All data cleared successfully');
+    } catch (error) {
+      console.error('[Database] Error clearing data:', error);
+      throw error;
     }
   }
 }

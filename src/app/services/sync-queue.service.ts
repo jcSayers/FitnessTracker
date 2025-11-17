@@ -164,6 +164,27 @@ export class SyncQueueService {
   }
 
   /**
+   * Clear all queue data including the database
+   * Used when completely resetting sync state
+   */
+  async clearAll(): Promise<void> {
+    try {
+      await this.syncQueueTable.clear();
+      await this.db.delete();
+      this.db = new Dexie('FitnessTrackerSyncQueue');
+      this.db.version(1).stores({
+        syncQueue: '++id, recordId, timestamp, synced'
+      });
+      this.syncQueueTable = this.db.table('syncQueue');
+      await this.db.open();
+      await this.updateQueueStatus();
+    } catch (error) {
+      console.error('[SyncQueue] Error clearing all:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all items in queue (useful for debugging)
    */
   async getAllQueueItems(): Promise<SyncQueueItem[]> {
