@@ -76,7 +76,7 @@ export class SyncQueueService {
    * Get all pending items that need to be synced
    */
   async getPendingItems(): Promise<SyncQueueItem[]> {
-    return this.syncQueueTable.where('synced').equals(false).toArray();
+    return this.syncQueueTable.where('synced').equals(false as any).toArray();
   }
 
   /**
@@ -146,7 +146,7 @@ export class SyncQueueService {
    * Safe cleanup after successful sync
    */
   async clearSyncedItems(): Promise<void> {
-    await this.syncQueueTable.where('synced').equals(true).delete();
+    await this.syncQueueTable.where('synced').equals(true as any).delete();
     await this.updateQueueStatus();
   }
 

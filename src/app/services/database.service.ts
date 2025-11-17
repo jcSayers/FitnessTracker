@@ -256,7 +256,7 @@ export class DatabaseService {
   async getExerciseLog(recordId: string): Promise<ExerciseLog | undefined> {
     // Since ExerciseLogs are indexed by exerciseId, we need to search through all logs
     const allLogs = await this.db.exerciseLogs.toArray();
-    return allLogs.find(log => log.id === recordId || log.exerciseId === recordId);
+    return allLogs.find(log => log.exerciseId === recordId);
   }
 
   async getExerciseLogs(exerciseId: string): Promise<ExerciseLog[]> {

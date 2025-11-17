@@ -1,4 +1,4 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, EffectRef } from '@angular/core';
 import { fromEvent, interval, merge, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 
@@ -152,18 +152,19 @@ export class ConnectivityService {
     }
 
     return new Promise((resolve) => {
-      let timeoutId: NodeJS.Timeout;
+      let timeoutId: ReturnType<typeof setTimeout>;
+      let effectRef: EffectRef | null = null;
 
-      const unsubscribe = effect(() => {
+      effectRef = effect(() => {
         if (this.isOnline()) {
           clearTimeout(timeoutId);
-          unsubscribe();
+          effectRef?.destroy();
           resolve(true);
         }
       });
 
       timeoutId = setTimeout(() => {
-        unsubscribe();
+        effectRef?.destroy();
         resolve(false);
       }, timeoutMs);
     });
