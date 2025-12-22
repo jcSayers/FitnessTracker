@@ -28,7 +28,8 @@
       "Bash(git commit:*)",
       "Bash(npm start:*)",
       "Bash(timeout 60 echo:*)",
-      "Bash(timeout 90 powershell:*)"
+      "Bash(timeout 90 powershell:*)",
+      "Bash(timeout 120 npm start:*)"
     ],
     "deny": [],
     "ask": []

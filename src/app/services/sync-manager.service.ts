@@ -334,10 +334,12 @@ export class SyncManagerService {
     const batchOperationId = this.diagnostics.logSyncStart('batch', items.length);
 
     try {
-      const payload = await this.buildSyncPayload(items);
+      // Deduplicate items: keep only the latest queue entry for each record
+      const dedupedItems = this.deduplicateQueueItems(items);
+
+      const payload = await this.buildSyncPayload(dedupedItems);
 
       if (!payload.workoutTemplates && !payload.workoutInstances && !payload.exerciseLogs) {
-        console.log('[SyncManager] Skipping sync - no data to send');
         this.diagnostics.logSyncComplete(batchOperationId, 0, 0, true);
         return true;
       }
@@ -455,6 +457,26 @@ export class SyncManagerService {
         console.error(`[SyncManager] Error marking ${record.type} ${record.id} as synced:`, error);
       }
     }
+  }
+
+  /**
+   * Deduplicate queue items - keep only the latest entry for each recordId
+   * This prevents sending duplicate records in the same batch
+   */
+  private deduplicateQueueItems(items: SyncQueueItem[]): SyncQueueItem[] {
+    const latestByRecord = new Map<string, SyncQueueItem>();
+
+    for (const item of items) {
+      const key = `${item.dataType}:${item.recordId}`;
+      const existing = latestByRecord.get(key);
+
+      // Keep the item with the highest ID (most recent entry)
+      if (!existing || (item.id && existing.id && item.id > existing.id)) {
+        latestByRecord.set(key, item);
+      }
+    }
+
+    return Array.from(latestByRecord.values());
   }
 
   /**
