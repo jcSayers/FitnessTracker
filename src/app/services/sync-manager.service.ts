@@ -146,7 +146,7 @@ export class SyncManagerService {
   private initializeAutoSync(): void {
     // Auto-sync when coming online (with debounce to prevent rapid retries)
     let lastSyncAttempt = 0;
-    const syncDebounceMs = 500;
+    const syncDebounceMs = 3000; // Increased debounce: sync takes 800-1000ms, plus time for queue updates
 
     effect(() => {
       // Update pending count whenever queue changes
@@ -195,6 +195,7 @@ export class SyncManagerService {
   /**
    * Perform synchronization immediately
    * Called on app load, manual trigger, or connectivity change
+   * Only syncs pending local changes (push only, no pull)
    */
   async syncNow(): Promise<boolean> {
     if (this.isSyncing()) {
@@ -294,6 +295,8 @@ export class SyncManagerService {
 
       if (allSuccess) {
         this.consecutiveFailures = 0; // Reset on complete success
+        // Update last sync time to trigger cooldown in auto-sync
+        this.lastSyncAttemptTime = Date.now();
       } else {
         this.consecutiveFailures++;
       }
