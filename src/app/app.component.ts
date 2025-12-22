@@ -36,6 +36,7 @@ export class AppComponent implements OnInit {
   syncStatus = signal<string>('');
   isOnline = signal(navigator.onLine);
   hasPendingSync = signal(false);
+  pendingCount = signal(0);
 
   constructor() {
     if (this.isDesktop()) {
@@ -56,6 +57,7 @@ export class AppComponent implements OnInit {
     // Subscribe to pending sync changes
     effect(() => {
       this.hasPendingSync.set(this.syncQueue.hasPendingChanges());
+      this.pendingCount.set(this.syncQueue.pendingCount());
     });
   }
 
@@ -84,8 +86,8 @@ export class AppComponent implements OnInit {
 
     // Check connectivity and sync if online
     if (this.connectivity.isOnline()) {
-      console.log('[AppComponent] Online detected, attempting initial sync...');
-      await this.syncManager.syncNow();
+      console.log('[AppComponent] Online detected, starting sync session...');
+      await this.syncManager.startSyncSession();
     } else {
       console.log('[AppComponent] Offline, skipping initial sync');
     }

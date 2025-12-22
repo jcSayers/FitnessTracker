@@ -30,6 +30,7 @@ export class SyncQueueService {
 
   // Signals for reactive state management
   queueCount = signal<number>(0);
+  pendingCount = signal<number>(0);
   hasPendingChanges = signal<boolean>(false);
   lastSyncTime = signal<Date | null>(null);
   isSyncing = signal<boolean>(false);
@@ -200,6 +201,7 @@ export class SyncQueueService {
     const pendingItems = allItems.filter(item => !item.synced);
 
     this.queueCount.set(allItems.length);
+    this.pendingCount.set(pendingItems.length);
     this.hasPendingChanges.set(pendingItems.length > 0);
   }
 
@@ -239,5 +241,38 @@ export class SyncQueueService {
       queueCount: this.queueCount(),
       syncError: this.syncError()
     };
+  }
+
+  /**
+   * Get queue snapshot for diagnostics
+   * Returns breakdown by type and operation
+   */
+  async getQueueSnapshot(): Promise<{
+    byType: {
+      template: number;
+      instance: number;
+      log: number;
+    };
+    byOperation: {
+      create: number;
+      update: number;
+      delete: number;
+    };
+  }> {
+    const allItems = await this.syncQueueTable.toArray();
+
+    const byType = {
+      template: allItems.filter(item => item.dataType === 'template').length,
+      instance: allItems.filter(item => item.dataType === 'instance').length,
+      log: allItems.filter(item => item.dataType === 'log').length
+    };
+
+    const byOperation = {
+      create: allItems.filter(item => item.operation === 'create').length,
+      update: allItems.filter(item => item.operation === 'update').length,
+      delete: allItems.filter(item => item.operation === 'delete').length
+    };
+
+    return { byType, byOperation };
   }
 }

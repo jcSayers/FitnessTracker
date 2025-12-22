@@ -207,7 +207,7 @@ export class DatabaseService {
     return id;
   }
 
-  async updateWorkoutTemplate(template: WorkoutTemplate): Promise<number> {
+  async updateWorkoutTemplate(template: WorkoutTemplate, skipSync = false): Promise<number> {
     template.updatedAt = new Date();
     const result = await this.db.workoutTemplates.update(template.id, {
       name: template.name,
@@ -217,10 +217,15 @@ export class DatabaseService {
       difficulty: template.difficulty,
       category: template.category,
       updatedAt: template.updatedAt,
-      isActive: template.isActive
+      isActive: template.isActive,
+      cloudId: template.cloudId,
+      synced: template.synced
     });
-    // Add to sync queue for remote sync
-    await this.syncQueue.addToQueue('template', 'update', template.id);
+
+    if (!skipSync) {
+      // Add to sync queue for remote sync
+      await this.syncQueue.addToQueue('template', 'update', template.id);
+    }
     return result;
   }
 
@@ -250,6 +255,23 @@ export class DatabaseService {
       .toArray();
   }
 
+  async getWorkoutTemplateByCloudId(cloudId: string): Promise<WorkoutTemplate | undefined> {
+    return await this.db.workoutTemplates.where('cloudId').equals(cloudId).first();
+  }
+
+  async upsertWorkoutTemplate(template: WorkoutTemplate, skipSync = false): Promise<void> {
+    // Check if it exists by ID
+    const existing = await this.db.workoutTemplates.get(template.id);
+    if (existing) {
+      await this.updateWorkoutTemplate(template, skipSync);
+    } else {
+      await this.db.workoutTemplates.put(template);
+      if (!skipSync) {
+        await this.syncQueue.addToQueue('template', 'create', template.id);
+      }
+    }
+  }
+
   // Workout Instance methods
   async getAllWorkoutInstances(): Promise<WorkoutInstance[]> {
     const instances = await this.db.workoutInstances.toArray();
@@ -274,7 +296,7 @@ export class DatabaseService {
     return id;
   }
 
-  async updateWorkoutInstance(instance: WorkoutInstance): Promise<number> {
+  async updateWorkoutInstance(instance: WorkoutInstance, skipSync = false): Promise<number> {
     const result = await this.db.workoutInstances.update(instance.id, {
       templateId: instance.templateId,
       templateName: instance.templateName,
@@ -286,10 +308,15 @@ export class DatabaseService {
       notes: instance.notes,
       location: instance.location,
       completedExercises: instance.completedExercises,
-      totalExercises: instance.totalExercises
+      totalExercises: instance.totalExercises,
+      cloudId: instance.cloudId,
+      synced: instance.synced
     });
-    // Add to sync queue for remote sync
-    await this.syncQueue.addToQueue('instance', 'update', instance.id);
+
+    if (!skipSync) {
+      // Add to sync queue for remote sync
+      await this.syncQueue.addToQueue('instance', 'update', instance.id);
+    }
     return result;
   }
 
@@ -298,13 +325,13 @@ export class DatabaseService {
       .where('status')
       .equals(WorkoutStatus.COMPLETED)
       .toArray();
-    
+
     const sortedInstances = instances.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    
+
     if (limit) {
       return sortedInstances.slice(0, limit);
     }
-    
+
     return sortedInstances;
   }
 
@@ -313,6 +340,22 @@ export class DatabaseService {
       .where('startTime')
       .between(startDate, endDate)
       .toArray();
+  }
+
+  async getWorkoutInstanceByCloudId(cloudId: string): Promise<WorkoutInstance | undefined> {
+    return await this.db.workoutInstances.where('cloudId').equals(cloudId).first();
+  }
+
+  async upsertWorkoutInstance(instance: WorkoutInstance, skipSync = false): Promise<void> {
+    const existing = await this.db.workoutInstances.get(instance.id);
+    if (existing) {
+      await this.updateWorkoutInstance(instance, skipSync);
+    } else {
+      await this.db.workoutInstances.put(instance);
+      if (!skipSync) {
+        await this.syncQueue.addToQueue('instance', 'create', instance.id);
+      }
+    }
   }
 
   // Exercise Log methods
@@ -343,17 +386,37 @@ export class DatabaseService {
     return logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
-  async updateExerciseLog(log: ExerciseLog): Promise<number> {
+  async getExerciseLogByCloudId(cloudId: string): Promise<ExerciseLog | undefined> {
+    return await this.db.exerciseLogs.where('cloudId').equals(cloudId).first();
+  }
+
+  async upsertExerciseLog(log: ExerciseLog, skipSync = false): Promise<void> {
+    const existing = await this.db.exerciseLogs.get(log.id);
+    if (existing) {
+      await this.updateExerciseLog(log, skipSync);
+    } else {
+      await this.db.exerciseLogs.put(log);
+      if (!skipSync) {
+        await this.syncQueue.addToQueue('log', 'create', log.id);
+      }
+    }
+  }
+
+  async updateExerciseLog(log: ExerciseLog, skipSync = false): Promise<number> {
     const result = await this.db.exerciseLogs.update(log.id, {
       exerciseName: log.exerciseName,
       date: log.date,
       sets: log.sets,
       personalRecord: log.personalRecord,
       cloudId: log.cloudId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      synced: log.synced
     });
-    // Add to sync queue for remote sync
-    await this.syncQueue.addToQueue('log', 'update', log.id);
+
+    if (!skipSync) {
+      // Add to sync queue for remote sync
+      await this.syncQueue.addToQueue('log', 'update', log.id);
+    }
     return result;
   }
 
@@ -391,8 +454,8 @@ export class DatabaseService {
 
     const favoriteCategory = Object.entries(categoryCount).length > 0
       ? Object.entries(categoryCount).reduce((a, b) =>
-          categoryCount[a[0] as WorkoutCategory] > categoryCount[b[0] as WorkoutCategory] ? a : b
-        )[0] as WorkoutCategory
+        categoryCount[a[0] as WorkoutCategory] > categoryCount[b[0] as WorkoutCategory] ? a : b
+      )[0] as WorkoutCategory
       : WorkoutCategory.STRENGTH;
 
     // Calculate current streak
@@ -403,7 +466,7 @@ export class DatabaseService {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    
+
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
@@ -438,9 +501,9 @@ export class DatabaseService {
     for (const workout of sortedWorkouts) {
       const workoutDate = new Date(workout.startTime);
       workoutDate.setHours(23, 59, 59, 999);
-      
+
       const daysDiff = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       if (daysDiff === streak) {
         streak++;
       } else if (daysDiff > streak + 1) {
@@ -469,7 +532,7 @@ export class DatabaseService {
 
       if (lastWorkoutDate) {
         const daysDiff = Math.floor((workoutDate.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+
         if (daysDiff === 1) {
           currentStreak++;
         } else if (daysDiff > 1) {

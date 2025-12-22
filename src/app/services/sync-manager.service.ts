@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { DatabaseService } from './database.service';
 import { SyncQueueService, SyncQueueItem } from './sync-queue.service';
 import { ConnectivityService } from './connectivity.service';
+import { SyncDiagnosticsService } from './sync-diagnostics.service';
 import { WorkoutTemplate, WorkoutInstance, ExerciseLog } from '../models/workout.models';
 
 /**
@@ -65,24 +66,41 @@ export class SyncManagerService {
     syncTimeout: 30000
   };
 
-  // Sync state signals
-  isSyncing = signal<boolean>(false);
+  // Safeguards configuration
+  private safeguards = {
+    maxQueueSize: 1000, // Alert if queue grows beyond this
+    maxConsecutiveFailures: 3, // Stop retrying after this many failures
+    minTimeBetweenSyncs: 1000, // Minimum ms between sync attempts (prevents API spam)
+    maxSyncDuration: 120000, // Max 2 minutes for a sync (detect stuck syncs)
+    detectedDuplicatePrevention: true // Track and prevent duplicate queue items
+  };
+
+  // Signals for reactive UI
+  readonly isSyncing = signal<boolean>(false);
+  readonly syncMessage = signal<string>('');
+  readonly syncError = signal<string | null>(null);
+  readonly pendingCount = signal<number>(0);
+
   lastSyncTime = signal<Date | null>(null);
   syncProgress = signal<number>(0); // 0-100
-  syncMessage = signal<string>('');
-  syncError = signal<string | null>(null);
   lastSyncResult = signal<SyncResponse | null>(null);
 
   // Track consecutive failed syncs to avoid infinite retry loops
   private consecutiveFailures = 0;
   private maxConsecutiveFailures = 3;
 
+  // Rate limiting
+  private lastSyncAttemptTime = 0;
+
+  // Track items seen in queue to detect duplicates
+  private queueItemTracker = new Map<string, { count: number; firstSeen: number }>();
+
   // Computed signals
   shouldAutoSync = computed(() => {
     return this.connectivity.isOnline() &&
-           this.syncQueue.hasPendingChanges() &&
-           !this.isSyncing() &&
-           this.consecutiveFailures < this.maxConsecutiveFailures;
+      this.syncQueue.hasPendingChanges() &&
+      !this.isSyncing() &&
+      this.consecutiveFailures < this.maxConsecutiveFailures;
   });
 
   canSync = computed(() => {
@@ -93,7 +111,8 @@ export class SyncManagerService {
     private db: DatabaseService,
     private syncQueue: SyncQueueService,
     private connectivity: ConnectivityService,
-    private http: HttpClient
+    private http: HttpClient,
+    private diagnostics: SyncDiagnosticsService
   ) {
     this.initializeAutoSync();
   }
@@ -106,18 +125,42 @@ export class SyncManagerService {
   }
 
   /**
+   * Start a full sync session (Push -> Pull)
+   * Called on app load
+   */
+  async startSyncSession(): Promise<void> {
+    if (!this.connectivity.isOnline()) {
+      console.log('[SyncManager] Offline, skipping initial sync session');
+      return;
+    }
+
+    console.log('[SyncManager] Starting initial sync session...');
+
+    // 1. Push local changes
+    await this.syncNow();
+
+    // 2. Pull remote changes
+    await this.pullFromCloud();
+
+    console.log('[SyncManager] Initial sync session complete');
+  }
+
+  /**
    * Initialize automatic sync triggers
    */
   private initializeAutoSync(): void {
     // Auto-sync when coming online (with debounce to prevent rapid retries)
     let lastSyncAttempt = 0;
-    const syncDebounceMs = 2000; // Wait at least 2 seconds between sync attempts
+    const syncDebounceMs = 500;
 
     effect(() => {
+      // Update pending count whenever queue changes
+      this.pendingCount.set(this.syncQueue.pendingCount());
+
       if (this.connectivity.isOnline() && this.syncQueue.hasPendingChanges() && !this.isSyncing()) {
         const now = Date.now();
         if (now - lastSyncAttempt >= syncDebounceMs) {
-          console.log('[SyncManager] Connectivity restored, attempting sync...');
+          console.log('[SyncManager] Connectivity restored or new changes, attempting sync...');
           lastSyncAttempt = now;
           this.syncNow();
         }
@@ -135,6 +178,38 @@ export class SyncManagerService {
   }
 
   /**
+   * Check if safeguards allow sync to proceed
+   * Returns null if allowed, or error message if blocked
+   */
+  private checkSafeguards(queueSize: number): string | null {
+    // Check queue size
+    if (queueSize > this.safeguards.maxQueueSize) {
+      const msg = `Queue size exceeded safeguard limit (${queueSize} > ${this.safeguards.maxQueueSize}). This suggests items are being added faster than they can be synced. Please check for data entry loops or app issues.`;
+      console.error('[SyncManager] SAFEGUARD BLOCKED:', msg);
+      this.diagnostics.addAnomaly('critical', 'queue_growth', msg, { queueSize });
+      return msg;
+    }
+
+    // Check rate limiting
+    const timeSinceLastSync = Date.now() - this.lastSyncAttemptTime;
+    if (timeSinceLastSync < this.safeguards.minTimeBetweenSyncs && this.lastSyncAttemptTime > 0) {
+      const msg = `Sync blocked: attempted too frequently (${timeSinceLastSync}ms since last attempt). This prevents API spam.`;
+      console.warn('[SyncManager] SAFEGUARD THROTTLED:', msg);
+      return msg;
+    }
+
+    // Check consecutive failures
+    if (this.consecutiveFailures >= this.safeguards.maxConsecutiveFailures) {
+      const msg = `Sync stopped after ${this.consecutiveFailures} consecutive failures. Server may be down or there may be a persistent error. Please check your connection or restart the app.`;
+      console.error('[SyncManager] SAFEGUARD BLOCKED:', msg);
+      this.diagnostics.addAnomaly('critical', 'high_failure_rate', msg, { consecutiveFailures: this.consecutiveFailures });
+      return msg;
+    }
+
+    return null; // All checks passed
+  }
+
+  /**
    * Perform synchronization immediately
    * Called on app load, manual trigger, or connectivity change
    */
@@ -149,11 +224,11 @@ export class SyncManagerService {
       return false;
     }
 
-    if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-      const errorMsg = `Sync stopped after ${this.maxConsecutiveFailures} consecutive failures. Please check your connection or restart the app.`;
-      this.syncError.set(errorMsg);
-      this.syncMessage.set(errorMsg);
-      console.warn('[SyncManager]', errorMsg);
+    const queueSize = this.syncQueue.queueCount();
+    const safeguardError = this.checkSafeguards(queueSize);
+    if (safeguardError) {
+      this.syncError.set(safeguardError);
+      this.syncMessage.set(safeguardError);
       return false;
     }
 
@@ -161,6 +236,10 @@ export class SyncManagerService {
     this.syncProgress.set(0);
     this.syncMessage.set('Starting sync...');
     this.syncError.set(null);
+    this.lastSyncAttemptTime = Date.now();
+
+    // Start diagnostics tracking
+    const operationId = this.diagnostics.logSyncStart('full_sync', queueSize);
 
     try {
       const pending = await this.syncQueue.getPendingItems();
@@ -170,28 +249,43 @@ export class SyncManagerService {
         this.syncProgress.set(100);
         this.lastSyncTime.set(new Date());
         this.consecutiveFailures = 0; // Reset on success
+        this.diagnostics.logSyncComplete(operationId, 0, 0, true);
         return true;
       }
 
       console.log(`[SyncManager] Syncing ${pending.length} pending changes`);
 
+      // Capture initial queue snapshot
+      const queueSnapshot = await this.syncQueue.getQueueSnapshot();
+      this.diagnostics.captureQueueSnapshot(
+        pending.length,
+        queueSnapshot.byType,
+        queueSnapshot.byOperation,
+        pending
+      );
+
+      // Track queue items to detect stuck items
+      this.diagnostics.trackQueueItems(pending);
+
       // Batch items into smaller chunks
       const batches = this.createBatches(pending, this.config.batchSize || 100);
       const syncedQueueIds: number[] = [];
       const syncedRecordIds: { type: 'template' | 'instance' | 'log'; id: string }[] = [];
+      let totalItemsProcessed = 0;
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
         this.syncProgress.set(Math.round((i / batches.length) * 100));
         this.syncMessage.set(`Syncing batch ${i + 1} of ${batches.length}...`);
 
-        const batchSuccess = await this.syncBatch(batch);
+        const batchSuccess = await this.syncBatch(batch, operationId);
         if (batchSuccess) {
           // Only mark successfully synced items (use queue item's ID, not record ID)
           const batchQueueIds = batch
             .map(item => item.id)
             .filter((id): id is number => id !== undefined && id !== null);
           syncedQueueIds.push(...batchQueueIds);
+          totalItemsProcessed += batch.length;
 
           // Track which records were synced for updating the main database
           for (const item of batch) {
@@ -222,6 +316,9 @@ export class SyncManagerService {
         this.consecutiveFailures++;
       }
 
+      // Get final queue count for diagnostics
+      const finalQueueCount = this.syncQueue.queueCount();
+
       this.syncProgress.set(100);
       this.lastSyncTime.set(new Date());
       this.syncQueue.updateSyncStatus(allSuccess);
@@ -229,6 +326,9 @@ export class SyncManagerService {
       const message = `Sync complete: ${syncedQueueIds.length} synced, ${failureCount} failed`;
       this.syncMessage.set(message);
       console.log(`[SyncManager] ${message}`);
+
+      // Log completion with diagnostics
+      this.diagnostics.logSyncComplete(operationId, totalItemsProcessed, finalQueueCount, allSuccess);
 
       return allSuccess;
 
@@ -238,6 +338,7 @@ export class SyncManagerService {
       this.syncError.set(errorMsg);
       this.syncQueue.updateSyncStatus(false, errorMsg);
       console.error('[SyncManager] Sync failed:', error);
+      this.diagnostics.logSyncError(operationId, error instanceof Error ? error : new Error(String(error)));
       return false;
 
     } finally {
@@ -248,16 +349,23 @@ export class SyncManagerService {
   /**
    * Sync a batch of queue items
    */
-  private async syncBatch(items: SyncQueueItem[]): Promise<boolean> {
+  private async syncBatch(items: SyncQueueItem[], parentOperationId?: string): Promise<boolean> {
+    const batchOperationId = this.diagnostics.logSyncStart('batch', items.length);
+
     try {
       const payload = await this.buildSyncPayload(items);
 
       if (!payload.workoutTemplates && !payload.workoutInstances && !payload.exerciseLogs) {
         console.log('[SyncManager] Skipping sync - no data to send');
+        this.diagnostics.logSyncComplete(batchOperationId, 0, 0, true);
         return true;
       }
 
-      console.log('[SyncManager] Sending payload:', payload);
+      console.log(`[SyncManager] Sending batch payload (${items.length} items):`, {
+        templates: payload.workoutTemplates?.length || 0,
+        instances: payload.workoutInstances?.length || 0,
+        logs: payload.exerciseLogs?.length || 0
+      });
 
       const response = await firstValueFrom(
         this.http.post<SyncResponse>(
@@ -278,7 +386,7 @@ export class SyncManagerService {
       this.lastSyncResult.set(response);
 
       if (response.success) {
-        console.log('[SyncManager] Batch synced successfully:', response);
+        console.log('[SyncManager] Batch synced successfully');
 
         // Update local database with returned UUIDs (cloudId mappings)
         if (response.data) {
@@ -290,14 +398,17 @@ export class SyncManagerService {
           }
         }
 
+        this.diagnostics.logSyncComplete(batchOperationId, items.length, this.syncQueue.queueCount(), true);
         return true;
       } else {
         console.error('[SyncManager] Batch sync returned error:', response.error || response.message);
+        this.diagnostics.logSyncError(batchOperationId, response.error || response.message || 'Unknown error');
         return false;
       }
 
     } catch (error) {
       console.error('[SyncManager] Batch sync error:', error);
+      this.diagnostics.logSyncError(batchOperationId, error instanceof Error ? error : new Error(String(error)));
       return false;
     }
   }
@@ -313,7 +424,7 @@ export class SyncManagerService {
         const template = await this.db.getWorkoutTemplate(mapping.localId);
         if (template) {
           template.cloudId = mapping.id;
-          await this.db.updateWorkoutTemplate(template);
+          await this.db.updateWorkoutTemplate(template, true); // skipSync = true
           console.log(`[SyncManager] Updated template ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
@@ -325,7 +436,7 @@ export class SyncManagerService {
         const instance = await this.db.getWorkoutInstance(mapping.localId);
         if (instance) {
           instance.cloudId = mapping.id;
-          await this.db.updateWorkoutInstance(instance);
+          await this.db.updateWorkoutInstance(instance, true); // skipSync = true
           console.log(`[SyncManager] Updated instance ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
@@ -337,7 +448,7 @@ export class SyncManagerService {
         const log = await this.db.getExerciseLog(mapping.localId);
         if (log) {
           log.cloudId = mapping.id;
-          await this.db.updateExerciseLog(log);
+          await this.db.updateExerciseLog(log, true); // skipSync = true
           console.log(`[SyncManager] Updated log ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
@@ -355,19 +466,19 @@ export class SyncManagerService {
           const template = await this.db.getWorkoutTemplate(record.id);
           if (template) {
             template.synced = true;
-            await this.db.updateWorkoutTemplate(template);
+            await this.db.updateWorkoutTemplate(template, true); // skipSync = true
           }
         } else if (record.type === 'instance') {
           const instance = await this.db.getWorkoutInstance(record.id);
           if (instance) {
             instance.synced = true;
-            await this.db.updateWorkoutInstance(instance);
+            await this.db.updateWorkoutInstance(instance, true); // skipSync = true
           }
         } else if (record.type === 'log') {
           const log = await this.db.getExerciseLog(record.id);
           if (log) {
             log.synced = true;
-            await this.db.updateExerciseLog(log);
+            await this.db.updateExerciseLog(log, true); // skipSync = true
           }
         }
       } catch (error) {
@@ -509,5 +620,92 @@ export class SyncManagerService {
    */
   async getQueueItems(): Promise<SyncQueueItem[]> {
     return this.syncQueue.getAllQueueItems();
+  }
+  /**
+   * Pull latest data from cloud
+   */
+  async pullFromCloud(): Promise<boolean> {
+    if (!this.connectivity.isOnline()) return false;
+
+    console.log('[SyncManager] Pulling data from cloud...');
+    this.isSyncing.set(true);
+    this.syncMessage.set('Pulling data from cloud...');
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get<SyncResponse>(`${this.config.serverUrl}/api/sync/${this.config.userId}`)
+      );
+
+      if (response.success && response.data) {
+        this.syncMessage.set('Applying cloud updates...');
+        await this.applyCloudData(response.data);
+        console.log('[SyncManager] Pull complete');
+        this.syncMessage.set('Sync complete');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('[SyncManager] Pull failed:', error);
+      this.syncError.set('Pull failed');
+      return false;
+    } finally {
+      this.isSyncing.set(false);
+    }
+  }
+
+  /**
+   * Apply cloud data to local database
+   */
+  private async applyCloudData(data: any): Promise<void> {
+    // Apply templates
+    if (data.workoutTemplates) {
+      for (const remote of data.workoutTemplates) {
+        // Try to find by cloudId first, then by ID (if it matches)
+        const existing = await this.db.getWorkoutTemplateByCloudId(remote.id) ||
+          await this.db.getWorkoutTemplate(remote.id);
+
+        if (existing) {
+          // Update existing
+          const updated = { ...existing, ...remote, id: existing.id, cloudId: remote.id, synced: true };
+          await this.db.upsertWorkoutTemplate(updated, true); // skipSync = true
+        } else {
+          // Create new
+          const newTemplate = { ...remote, cloudId: remote.id, synced: true };
+          await this.db.upsertWorkoutTemplate(newTemplate, true); // skipSync = true
+        }
+      }
+    }
+
+    // Apply instances
+    if (data.workoutInstances) {
+      for (const remote of data.workoutInstances) {
+        const existing = await this.db.getWorkoutInstanceByCloudId(remote.id) ||
+          await this.db.getWorkoutInstance(remote.id);
+
+        if (existing) {
+          const updated = { ...existing, ...remote, id: existing.id, cloudId: remote.id, synced: true };
+          await this.db.upsertWorkoutInstance(updated, true); // skipSync = true
+        } else {
+          const newInstance = { ...remote, cloudId: remote.id, synced: true };
+          await this.db.upsertWorkoutInstance(newInstance, true); // skipSync = true
+        }
+      }
+    }
+
+    // Apply logs
+    if (data.exerciseLogs) {
+      for (const remote of data.exerciseLogs) {
+        const existing = await this.db.getExerciseLogByCloudId(remote.id) ||
+          await this.db.getExerciseLog(remote.id);
+
+        if (existing) {
+          const updated = { ...existing, ...remote, id: existing.id, cloudId: remote.id, synced: true };
+          await this.db.upsertExerciseLog(updated, true); // skipSync = true
+        } else {
+          const newLog = { ...remote, cloudId: remote.id, synced: true };
+          await this.db.upsertExerciseLog(newLog, true); // skipSync = true
+        }
+      }
+    }
   }
 }
