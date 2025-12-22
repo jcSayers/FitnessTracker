@@ -130,19 +130,14 @@ export class SyncManagerService {
    */
   async startSyncSession(): Promise<void> {
     if (!this.connectivity.isOnline()) {
-      console.log('[SyncManager] Offline, skipping initial sync session');
       return;
     }
-
-    console.log('[SyncManager] Starting initial sync session...');
 
     // 1. Push local changes
     await this.syncNow();
 
     // 2. Pull remote changes
     await this.pullFromCloud();
-
-    console.log('[SyncManager] Initial sync session complete');
   }
 
   /**
@@ -160,19 +155,9 @@ export class SyncManagerService {
       if (this.connectivity.isOnline() && this.syncQueue.hasPendingChanges() && !this.isSyncing()) {
         const now = Date.now();
         if (now - lastSyncAttempt >= syncDebounceMs) {
-          console.log('[SyncManager] Connectivity restored or new changes, attempting sync...');
           lastSyncAttempt = now;
           this.syncNow();
         }
-      }
-    });
-
-    // Log sync state changes
-    effect(() => {
-      if (this.isSyncing()) {
-        console.log('[SyncManager] Sync started');
-      } else {
-        console.log('[SyncManager] Sync completed');
       }
     });
   }
@@ -193,9 +178,7 @@ export class SyncManagerService {
     // Check rate limiting
     const timeSinceLastSync = Date.now() - this.lastSyncAttemptTime;
     if (timeSinceLastSync < this.safeguards.minTimeBetweenSyncs && this.lastSyncAttemptTime > 0) {
-      const msg = `Sync blocked: attempted too frequently (${timeSinceLastSync}ms since last attempt). This prevents API spam.`;
-      console.warn('[SyncManager] SAFEGUARD THROTTLED:', msg);
-      return msg;
+      return null;
     }
 
     // Check consecutive failures
@@ -215,12 +198,10 @@ export class SyncManagerService {
    */
   async syncNow(): Promise<boolean> {
     if (this.isSyncing()) {
-      console.warn('[SyncManager] Sync already in progress');
       return false;
     }
 
     if (!this.connectivity.isOnline()) {
-      console.warn('[SyncManager] Cannot sync - offline');
       return false;
     }
 
@@ -252,8 +233,6 @@ export class SyncManagerService {
         this.diagnostics.logSyncComplete(operationId, 0, 0, true);
         return true;
       }
-
-      console.log(`[SyncManager] Syncing ${pending.length} pending changes`);
 
       // Capture initial queue snapshot
       const queueSnapshot = await this.syncQueue.getQueueSnapshot();
@@ -297,7 +276,6 @@ export class SyncManagerService {
       // Mark synced items in the queue
       if (syncedQueueIds.length > 0) {
         await this.syncQueue.markMultipleAsSynced(syncedQueueIds);
-        console.log(`[SyncManager] Marked ${syncedQueueIds.length} items as synced in queue`);
       }
 
       // Mark synced items in the main database
@@ -307,11 +285,15 @@ export class SyncManagerService {
 
       const failureCount = pending.length - syncedQueueIds.length;
       const allSuccess = failureCount === 0;
+
+      // Always clear successfully synced items from queue, even if some items failed
+      // This prevents exponential growth of synced items that are never removed
+      if (syncedQueueIds.length > 0) {
+        await this.syncQueue.clearSyncedItems();
+      }
+
       if (allSuccess) {
         this.consecutiveFailures = 0; // Reset on complete success
-        // Clear synced items from queue to prevent re-triggering
-        await this.syncQueue.clearSyncedItems();
-        console.log('[SyncManager] Cleared synced items from queue');
       } else {
         this.consecutiveFailures++;
       }
@@ -325,7 +307,6 @@ export class SyncManagerService {
 
       const message = `Sync complete: ${syncedQueueIds.length} synced, ${failureCount} failed`;
       this.syncMessage.set(message);
-      console.log(`[SyncManager] ${message}`);
 
       // Log completion with diagnostics
       this.diagnostics.logSyncComplete(operationId, totalItemsProcessed, finalQueueCount, allSuccess);
@@ -361,12 +342,6 @@ export class SyncManagerService {
         return true;
       }
 
-      console.log(`[SyncManager] Sending batch payload (${items.length} items):`, {
-        templates: payload.workoutTemplates?.length || 0,
-        instances: payload.workoutInstances?.length || 0,
-        logs: payload.exerciseLogs?.length || 0
-      });
-
       const response = await firstValueFrom(
         this.http.post<SyncResponse>(
           `${this.config.serverUrl}/api/sync`,
@@ -386,8 +361,6 @@ export class SyncManagerService {
       this.lastSyncResult.set(response);
 
       if (response.success) {
-        console.log('[SyncManager] Batch synced successfully');
-
         // Update local database with returned UUIDs (cloudId mappings)
         if (response.data) {
           try {
@@ -425,7 +398,6 @@ export class SyncManagerService {
         if (template) {
           template.cloudId = mapping.id;
           await this.db.updateWorkoutTemplate(template, true); // skipSync = true
-          console.log(`[SyncManager] Updated template ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
     }
@@ -437,7 +409,6 @@ export class SyncManagerService {
         if (instance) {
           instance.cloudId = mapping.id;
           await this.db.updateWorkoutInstance(instance, true); // skipSync = true
-          console.log(`[SyncManager] Updated instance ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
     }
@@ -449,7 +420,6 @@ export class SyncManagerService {
         if (log) {
           log.cloudId = mapping.id;
           await this.db.updateExerciseLog(log, true); // skipSync = true
-          console.log(`[SyncManager] Updated log ${mapping.localId} with cloudId ${mapping.id}`);
         }
       }
     }
@@ -485,7 +455,6 @@ export class SyncManagerService {
         console.error(`[SyncManager] Error marking ${record.type} ${record.id} as synced:`, error);
       }
     }
-    console.log(`[SyncManager] Marked ${records.length} records as synced in main database`);
   }
 
   /**
@@ -583,7 +552,6 @@ export class SyncManagerService {
     else if (type === 'log') items = pending.logs;
 
     if (items.length === 0) {
-      console.log(`[SyncManager] No pending ${type} changes`);
       return true;
     }
 
@@ -612,7 +580,6 @@ export class SyncManagerService {
    */
   async clearQueue(): Promise<void> {
     await this.syncQueue.clearQueue();
-    console.log('[SyncManager] Sync queue cleared');
   }
 
   /**
@@ -627,7 +594,6 @@ export class SyncManagerService {
   async pullFromCloud(): Promise<boolean> {
     if (!this.connectivity.isOnline()) return false;
 
-    console.log('[SyncManager] Pulling data from cloud...');
     this.isSyncing.set(true);
     this.syncMessage.set('Pulling data from cloud...');
 
@@ -639,7 +605,6 @@ export class SyncManagerService {
       if (response.success && response.data) {
         this.syncMessage.set('Applying cloud updates...');
         await this.applyCloudData(response.data);
-        console.log('[SyncManager] Pull complete');
         this.syncMessage.set('Sync complete');
         return true;
       }

@@ -50,11 +50,6 @@ export class ConnectivityService {
         this.isOnline.set(isOnline);
       });
 
-    // Log connectivity changes
-    effect(() => {
-      const online = this.isOnline();
-      console.log(`[Connectivity] ${online ? 'Online' : 'Offline'}`);
-    });
   }
 
   /**

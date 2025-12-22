@@ -25,7 +25,10 @@
       "Bash(node -e:*)",
       "Bash(node run-migration.js:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm start:*)",
+      "Bash(timeout 60 echo:*)",
+      "Bash(timeout 90 powershell:*)"
     ],
     "deny": [],
     "ask": []
