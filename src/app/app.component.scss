@@ -1,6 +1,6 @@
 .app-container {
   min-height: 100vh;
-  background-color: var(--background-color, #fafafa);
+  background: var(--bg-gradient-main);
   color: var(--text-color, rgba(0, 0, 0, 0.87));
 }
 

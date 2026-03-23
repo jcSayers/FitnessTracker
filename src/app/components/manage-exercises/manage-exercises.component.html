@@ -31,6 +31,13 @@
               <div class="exercise-info">
                 <h3>{{ exercise.name }}</h3>
                 <p class="exercise-details">{{ getExerciseDescription(exercise) }}</p>
+                @if (getExerciseTags(exercise).length > 0) {
+                  <div class="exercise-tags">
+                    @for (tag of getExerciseTags(exercise); track tag) {
+                      <span class="tag">{{ tag }}</span>
+                    }
+                  </div>
+                }
                 @if (exercise.notes) {
                   <p class="exercise-notes">
                     <app-svg-icon name="note" size="sm"></app-svg-icon>

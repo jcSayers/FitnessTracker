@@ -3,13 +3,29 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   z-index: 1000;
   padding: 8px 0;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.5),
+    0 -8px 48px rgba(0, 0, 0, 0.3);
+
+  /* Subtle gradient from bottom */
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(8, 136, 255, 0.02) 100%);
+    pointer-events: none;
+  }
 
   .mat-mdc-tab-group {
     .mat-mdc-tab-header {

@@ -19,28 +19,35 @@ body {
 }
 
 
-/* Glassmorphism card utilities - SetGraph style */
+/* Glassmorphism card utilities - Enhanced with 40px blur */
 .glass-card {
-  background: var(--card-bg-blur) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--glass-shadow);
+  background: var(--card-bg-enhanced) !important;
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow-layered);
 }
 
 .glass-card-blue {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  background: var(--glass-bg-enhanced) !important;
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  border: 1px solid var(--glass-border-enhanced);
+  box-shadow: var(--card-shadow-layered), var(--glass-glow);
 }
 
 .glass-card-success {
   background: var(--glass-success-bg) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
   border: 1px solid var(--glass-success-border);
+}
+
+.glass-float {
+  background: var(--float-bg) !important;
+  backdrop-filter: blur(var(--float-blur));
+  -webkit-backdrop-filter: blur(var(--float-blur));
+  border: 1px solid var(--float-border);
 }
 
 /* Custom Component Utilities */
@@ -52,12 +59,20 @@ body {
   border-radius: 0.375rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+
+  .svg-icon {
+    transition: transform 0.25s ease;
+  }
+
+  &:hover .svg-icon {
+    transform: translateX(2px);
+  }
 }
 
 .btn:disabled {
@@ -66,14 +81,14 @@ body {
 }
 
 .btn-primary {
-  background: var(--primary, #007bff);
+  background: var(--primary-color, #0888ff);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark, #0056b3);
+  background: linear-gradient(135deg, #0888ff 0%, #0a7de6 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(8, 136, 255, 0.35);
 }
 
 .btn-danger {
@@ -330,4 +345,18 @@ body {
 
 .text-lg {
   font-size: 1.125rem;
+}
+
+/* Animation Keyframes */
+
+/* Card entrance animation - used for workout cards */
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

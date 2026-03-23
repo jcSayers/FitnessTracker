@@ -132,7 +132,7 @@ export class ManageExercisesComponent implements OnInit {
       parts.push(`${exercise.reps} reps`);
     }
     if (exercise.weight) {
-      parts.push(`${exercise.weight}lbs`);
+      parts.push(`${exercise.weight}kg`);
     }
     if (exercise.duration) {
       parts.push(`${exercise.duration}s`);
@@ -142,6 +142,22 @@ export class ManageExercisesComponent implements OnInit {
     }
 
     return parts.join(' • ');
+  }
+
+  getExerciseTags(exercise: Exercise): string[] {
+    const tags: string[] = [];
+
+    if (exercise.isDropset) {
+      tags.push('Dropset');
+    }
+    if (exercise.isSupersetWith) {
+      const pairedExercise = this.workoutData().exercises.find(ex => ex.id === exercise.isSupersetWith);
+      if (pairedExercise) {
+        tags.push(`Superset: ${pairedExercise.name}`);
+      }
+    }
+
+    return tags;
   }
 
   private generateId(): string {

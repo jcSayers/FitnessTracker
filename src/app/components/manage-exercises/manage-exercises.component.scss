@@ -105,6 +105,36 @@
           font-size: 14px;
         }
 
+        .exercise-tags {
+          margin: 8px 0;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .tag {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg,
+              rgba(0, 102, 255, 0.15),
+              rgba(0, 82, 204, 0.15));
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            color: #4285f4;
+            border-radius: 999px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+
+            &.tag-dropset {
+              background: linear-gradient(135deg,
+                rgba(255, 152, 0, 0.15),
+                rgba(251, 140, 0, 0.15));
+              border-color: rgba(255, 152, 0, 0.3);
+              color: #ff9800;
+            }
+          }
+        }
+
         .exercise-notes {
           margin: 8px 0 0 0;
           color: var(--secondary-color);

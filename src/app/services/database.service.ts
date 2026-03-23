@@ -19,9 +19,9 @@ export class FitnessDatabase extends Dexie {
   constructor() {
     super('FitnessTrackerDB');
     this.version(1).stores({
-      workoutTemplates: 'id, name, category, difficulty, createdAt',
-      workoutInstances: 'id, templateId, startTime, endTime, status',
-      exerciseLogs: 'exerciseId, exerciseName, date'
+      workoutTemplates: 'id, name, category, difficulty, createdAt, cloudId',
+      workoutInstances: 'id, templateId, startTime, endTime, status, cloudId',
+      exerciseLogs: 'exerciseId, exerciseName, date, cloudId'
     });
   }
 }
@@ -67,7 +67,9 @@ export class DatabaseService {
 
       // Re-queue templates that aren't already pending and haven't been synced
       const templates = await this.db.workoutTemplates.toArray();
+      console.log(`[Database] Found ${templates.length} templates in local DB`);
       for (const template of templates) {
+        console.log(`[Database] Template ${template.id}: synced=${template.synced}, has cloudId=${!!template.cloudId}`);
         if (!pendingIds.has(template.id) && !template.synced) {
           await this.syncQueue.addToQueue('template', 'create', template.id);
           queuedCount++;
@@ -76,6 +78,7 @@ export class DatabaseService {
 
       // Re-queue instances that aren't already pending and haven't been synced
       const instances = await this.db.workoutInstances.toArray();
+      console.log(`[Database] Found ${instances.length} instances in local DB`);
       for (const instance of instances) {
         if (!pendingIds.has(instance.id) && !instance.synced) {
           await this.syncQueue.addToQueue('instance', 'create', instance.id);
@@ -85,6 +88,7 @@ export class DatabaseService {
 
       // Re-queue logs that aren't already pending and haven't been synced
       const logs = await this.db.exerciseLogs.toArray();
+      console.log(`[Database] Found ${logs.length} logs in local DB`);
       for (const log of logs) {
         if (!pendingIds.has(log.exerciseId) && !log.synced) {
           await this.syncQueue.addToQueue('log', 'create', log.exerciseId);
@@ -92,6 +96,7 @@ export class DatabaseService {
         }
       }
 
+      console.log(`[Database] Re-queued ${queuedCount} unsynced items for sync`);
     } catch (error) {
       console.error('[Database] Error re-queuing existing data:', error);
       // Don't throw - this is a non-critical operation

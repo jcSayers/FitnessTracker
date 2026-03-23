@@ -5,11 +5,13 @@ export interface Exercise {
   name: string;
   sets: number;
   reps?: number;
-  weight?: number;
+  weight?: number; // in kilograms
   duration?: number; // in seconds for time-based exercises
   restTime?: number; // in seconds
   notes?: string;
   category: ExerciseCategory;
+  isSupersetWith?: string; // ID of the exercise this forms a superset with
+  isDropset?: boolean; // Whether this is a dropset (lighter weight, higher reps after main exercise)
 }
 
 export enum ExerciseCategory {
@@ -53,7 +55,7 @@ export interface WorkoutSet {
   exerciseId: string;
   setNumber: number;
   reps?: number;
-  weight?: number;
+  weight?: number; // in kilograms
   duration?: number; // in seconds
   restTime?: number; // in seconds
   completed: boolean;
@@ -118,7 +120,7 @@ export interface ExerciseLog {
   date: Date;
   sets: WorkoutSet[];
   personalRecord?: {
-    weight?: number;
+    weight?: number; // in kilograms
     reps?: number;
     duration?: number;
   };

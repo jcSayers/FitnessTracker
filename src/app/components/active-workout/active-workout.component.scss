@@ -174,23 +174,37 @@
           font-size: 16px;
           font-weight: 600;
           color: rgba(235, 235, 245, 0.4);
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          position: relative;
 
           &.completed {
-            background: var(--glass-bg);
+            background: var(--glass-bg-enhanced);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-color: var(--glass-border);
+            border-color: var(--glass-border-enhanced);
             color: var(--primary-color);
-            box-shadow: 0 0 20px rgba(8, 136, 255, 0.3);
+            box-shadow:
+              0 0 20px rgba(8, 136, 255, 0.4),
+              0 0 0 4px rgba(8, 136, 255, 0.15);
+            animation: setComplete 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            /* Checkmark icon with delayed entrance */
+            &::after {
+              content: '✓';
+              position: absolute;
+              font-size: 20px;
+              animation: checkmarkAppear 0.3s ease-out 0.2s both;
+            }
           }
 
           &.current {
             background: rgba(8, 136, 255, 0.15);
-            border-color: var(--primary-color);
-            border-width: 2px;
+            border: 2px solid var(--primary-color);
             color: var(--primary-color);
-            animation: pulse 2s ease-in-out infinite;
+            animation: breathingGlow 2s ease-in-out infinite;
+            box-shadow:
+              0 0 0 4px rgba(8, 136, 255, 0.1),
+              0 0 20px rgba(8, 136, 255, 0.3);
           }
         }
       }
@@ -415,5 +429,48 @@
       width: 56px;
       height: 56px;
     }
+  }
+}
+
+/* Set Circle Animations */
+
+/* Breathing glow for current set */
+@keyframes breathingGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px rgba(8, 136, 255, 0.1),
+      0 0 20px rgba(8, 136, 255, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(8, 136, 255, 0.15),
+      0 0 30px rgba(8, 136, 255, 0.5);
+  }
+}
+
+/* Bounce animation for set completion */
+@keyframes setComplete {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Checkmark appearing after completion */
+@keyframes checkmarkAppear {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
   }
 }
