@@ -35,6 +35,8 @@ export class CreateWorkoutComponent implements OnInit {
   // Enum arrays for dropdowns
   readonly workoutCategories = Object.values(WorkoutCategory);
   readonly difficultyLevels = Object.values(DifficultyLevel);
+  readonly difficultyOptions = Object.values(DifficultyLevel);
+  readonly categoryOptions   = Object.values(WorkoutCategory);
 
   ngOnInit() {
     this.initializeForm();

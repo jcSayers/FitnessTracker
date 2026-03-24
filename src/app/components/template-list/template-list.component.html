@@ -1,0 +1,74 @@
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
+
+  <div class="text-[9px] uppercase tracking-widest text-outline mb-1">&gt; ls -la ./templates/routines/</div>
+  <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary mb-6">ROUTINES.DIR</h1>
+
+  <!-- STAT HEADER -->
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="bg-surface-container border border-outline-variant p-3">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-1">Total Objects</div>
+      <div class="text-2xl font-bold">{{ templates().length }}</div>
+    </div>
+    <div class="bg-surface-container border border-outline-variant p-3">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-1">Est. Duration</div>
+      <div class="text-2xl font-bold">—</div>
+    </div>
+    <div class="bg-surface-container border border-outline-variant p-3">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-1">Sys Status</div>
+      <div class="text-[9px] uppercase text-on-surface-variant">NOMINAL</div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE LIST -->
+  <div class="border border-outline-variant mb-4">
+    <div class="grid grid-cols-[1.5fr_2fr_1fr_auto] gap-2 bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+      <span>Permissions</span><span>Routine</span><span>Stats</span><span>Execute</span>
+    </div>
+    @if (isLoading()) {
+      <div class="px-3 py-4 text-xs text-outline-variant">&gt;&gt;&gt; LOADING_ROUTINES...</div>
+    } @else if (templates().length === 0) {
+      <div class="px-3 py-4 text-xs text-outline-variant">
+        &gt;&gt;&gt; NO_ROUTINES_FOUND — RUN: mkdir routine
+      </div>
+    } @else {
+      @for (t of templates(); track t.id) {
+        <div class="grid grid-cols-[1.5fr_2fr_1fr_auto] gap-2 items-center px-3 py-3 border-t border-outline-variant text-xs hover:bg-surface-container">
+          <span class="text-outline-variant text-[8px] truncate">-rwxr-xr-x root</span>
+          <span class="font-bold uppercase truncate">{{ t.name }}</span>
+          <span class="text-outline text-[9px]">{{ statsLabel(t) }}</span>
+          <div class="flex gap-2">
+            <button (click)="start(t)"
+              class="bg-primary text-on-primary text-[9px] uppercase px-2 py-1 font-bold hover:bg-on-surface hover:text-surface">
+              [START]
+            </button>
+            <button (click)="edit(t)"
+              class="border border-primary text-primary bg-transparent text-[9px] uppercase px-2 py-1 hover:bg-primary hover:text-on-primary">
+              [EDIT]
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- NEW ROUTINE -->
+  <button (click)="createNew()"
+    class="w-full border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-3 hover:border-primary hover:text-primary mb-6 text-center">
+    + MKDIR NEW_ROUTINE
+  </button>
+
+  <!-- COMMAND PROMPT -->
+  <div class="bg-surface-container-lowest border border-outline-variant p-3">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-outline text-xs">&gt;</span>
+      <input [value]="commandInput()" (input)="commandInput.set($any($event.target).value)"
+        class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1 placeholder-outline-variant"
+        placeholder="enter command..."/>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      @for (cmd of ['help', 'mkdir routine', 'sudo su athlete']; track cmd) {
+        <span class="border border-outline-variant text-outline-variant text-[9px] px-2 py-1 uppercase">{{ cmd }}</span>
+      }
+    </div>
+  </div>
+</div>

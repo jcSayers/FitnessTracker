@@ -1,5 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -11,7 +12,8 @@ import { Exercise, ExerciseCategory } from '../../models/workout.models';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FormsModule
   ],
   templateUrl: './add-exercise.component.html',
   styleUrls: ['./add-exercise.component.scss']
@@ -23,11 +25,20 @@ export class AddExerciseComponent implements OnInit {
   private workoutBuilder = inject(WorkoutBuilderService);
 
   exerciseForm!: FormGroup;
-  isEditMode = false;
+  isEditMode = signal(false);
   editIndex: number | null = null;
 
   readonly ExerciseCategory = ExerciseCategory;
   readonly exerciseCategories = Object.values(ExerciseCategory);
+
+  readonly CATEGORIES = ['PUSH', 'PULL', 'LEGS', 'CORE', 'CARDIO'] as const;
+  readonly EQUIPMENT  = ['BARBELL', 'DUMBBELL', 'MACHINE', 'BODYWEIGHT', 'CABLE', 'RESISTANCE_BAND'] as const;
+  selectedCategory  = signal('');
+  selectedEquipment = signal('');
+
+  // Signal-backed fields for ngModel bindings in the template
+  nameValue    = signal('');
+  notesValue   = signal('');
 
   ngOnInit() {
     this.initializeForm();
@@ -56,9 +67,11 @@ export class AddExerciseComponent implements OnInit {
 
   private checkEditMode() {
     const indexParam = this.route.snapshot.queryParams['index'];
-    if (indexParam !== undefined) {
-      this.isEditMode = true;
-      this.editIndex = parseInt(indexParam, 10);
+    const idParam    = this.route.snapshot.queryParams['id'];
+    if (indexParam !== undefined || idParam !== undefined) {
+      this.isEditMode.set(true);
+      const raw = indexParam ?? idParam;
+      this.editIndex = parseInt(raw, 10);
       this.loadExerciseForEdit(this.editIndex);
     }
   }
@@ -80,6 +93,11 @@ export class AddExerciseComponent implements OnInit {
         isSupersetWith: exercise.isSupersetWith || null,
         isDropset: exercise.isDropset || false
       });
+      this.nameValue.set(exercise.name ?? '');
+      this.notesValue.set(exercise.notes ?? '');
+      if (exercise.category) {
+        this.selectedCategory.set(exercise.category as string);
+      }
     }
   }
 
@@ -89,6 +107,13 @@ export class AddExerciseComponent implements OnInit {
   }
 
   onSave() {
+    // Sync signal values back into the reactive form before validation
+    this.exerciseForm.patchValue({
+      name:     this.nameValue(),
+      category: this.selectedCategory() || this.exerciseForm.get('category')?.value,
+      notes:    this.notesValue()
+    });
+
     if (!this.exerciseForm.valid) {
       this.exerciseForm.markAllAsTouched();
       return;
@@ -127,7 +152,7 @@ export class AddExerciseComponent implements OnInit {
       isDropset: formValue.isDropset ? true : undefined
     };
 
-    if (this.isEditMode && this.editIndex !== null) {
+    if (this.isEditMode() && this.editIndex !== null) {
       this.workoutBuilder.updateExercise(this.editIndex, exercise);
     } else {
       this.workoutBuilder.addExercise(exercise);

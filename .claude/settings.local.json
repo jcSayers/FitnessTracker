@@ -30,7 +30,11 @@
       "Bash(timeout 60 echo:*)",
       "Bash(timeout 90 powershell:*)",
       "Bash(timeout 120 npm start:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(bash \"C:/Users/boyba/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/Dev/FitnessTracker\")",
+      "Bash(xargs grep:*)",
+      "Bash(ls C:/Dev/FitnessTracker/tailwind.config*)",
+      "Bash(ls C:/Dev/FitnessTracker/*.config*)"
     ],
     "deny": [],
     "ask": []

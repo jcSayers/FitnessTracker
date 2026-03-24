@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { DatabaseService } from '../../services/database.service';
@@ -9,7 +9,8 @@ import { WorkoutTemplate, WorkoutCategory, DifficultyLevel, WorkoutStats } from 
   selector: 'app-workout-list',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    DatePipe
   ],
   templateUrl: './workout-list.component.html',
   styleUrls: ['./workout-list.component.scss']
@@ -26,9 +27,45 @@ export class WorkoutListComponent implements OnInit {
   readonly WorkoutCategory = WorkoutCategory;
   readonly DifficultyLevel = DifficultyLevel;
 
+  recentSessions = signal<any[]>([]);
+
+  xpProgress = computed(() => Math.min((this.recentSessions().length % 10) * 10, 100));
+  level = computed(() => Math.floor(this.recentSessions().length / 10) + 1);
+  totalVolume = computed(() =>
+    this.recentSessions().reduce((acc: number, s: any) => acc + (s.totalVolume ?? 0), 0)
+  );
+  heatmapRows = computed(() => {
+    const sessionDates = new Set(
+      this.recentSessions().map((s: any) => {
+        const d = new Date(s.startTime);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      })
+    );
+    return Array.from({ length: 8 }, (_, row) =>
+      Array.from({ length: 7 }, (__, col) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (55 - (row * 7 + col)));
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        return sessionDates.has(key) ? '█ ' : '. ';
+      }).join('')
+    );
+  });
+  asciiBar(pct: number, width = 20): string {
+    const f = Math.round((pct / 100) * width);
+    return '[' + '|'.repeat(f) + '.'.repeat(width - f) + ']';
+  }
+
   ngOnInit() {
     this.loadWorkouts();
     this.loadStats();
+    this.loadRecentSessions();
+  }
+
+  async loadRecentSessions() {
+    try {
+      const all = await this.databaseService.getAllWorkoutInstances();
+      this.recentSessions.set([...all].reverse().slice(0, 20));
+    } catch (e) { console.error(e); }
   }
 
   async loadWorkouts() {

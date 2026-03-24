@@ -1,116 +1,65 @@
-<div class="manage-exercises-container">
-  <div class="header">
-    <button (click)="onBack()" class="btn btn-icon back-button" title="Go back">
-      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
-    </button>
-    <div class="header-content">
-      <h1>{{ workoutData().name }}</h1>
-      @if (workoutData().description) {
-        <p class="subtitle">{{ workoutData().description }}</p>
-      }
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
+
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary">EXERCISES.DB</h1>
+      <p class="text-[9px] uppercase tracking-widest text-outline mt-1">ls -la ./exercises/</p>
     </div>
+    <button (click)="router.navigate(['/add-exercise'])"
+      class="bg-primary text-on-primary text-[9px] uppercase px-3 py-2 font-bold hover:bg-on-surface hover:text-surface shrink-0">
+      + NEW
+    </button>
   </div>
 
-  <div class="exercises-section">
-    <div class="section-header">
-      <h2>Exercises ({{ workoutData().exercises.length }})</h2>
-      <button
-        (click)="onAddExercise()"
-        class="btn btn-primary">
-        <app-svg-icon name="add" size="md"></app-svg-icon>
-        Add Exercise
-      </button>
-    </div>
+  <!-- FILTER -->
+  <div class="flex items-center gap-2 border-b border-secondary mb-4 pb-1">
+    <span class="text-outline text-xs">&gt;</span>
+    <input [value]="filterQuery()" (input)="filterQuery.set($any($event.target).value)"
+      class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1 placeholder-outline-variant"
+      placeholder="filter exercises..."/>
+  </div>
 
-    @if (workoutData().exercises.length > 0) {
-      <div class="exercises-list">
-        @for (exercise of workoutData().exercises; track exercise.id; let i = $index) {
-          <div class="exercise-card card">
-            <div class="exercise-content">
-              <div class="exercise-number">{{ i + 1 }}</div>
-              <div class="exercise-info">
-                <h3>{{ exercise.name }}</h3>
-                <p class="exercise-details">{{ getExerciseDescription(exercise) }}</p>
-                @if (getExerciseTags(exercise).length > 0) {
-                  <div class="exercise-tags">
-                    @for (tag of getExerciseTags(exercise); track tag) {
-                      <span class="tag">{{ tag }}</span>
-                    }
-                  </div>
-                }
-                @if (exercise.notes) {
-                  <p class="exercise-notes">
-                    <app-svg-icon name="note" size="sm"></app-svg-icon>
-                    {{ exercise.notes }}
-                  </p>
-                }
-              </div>
-              <div class="exercise-actions">
-                <button
-                  class="btn btn-icon"
-                  [disabled]="i === 0"
-                  (click)="onMoveUp(i)"
-                  title="Move up">
-                  <app-svg-icon name="arrow_upward" size="md"></app-svg-icon>
-                </button>
-                <button
-                  class="btn btn-icon"
-                  [disabled]="i === workoutData().exercises.length - 1"
-                  (click)="onMoveDown(i)"
-                  title="Move down">
-                  <app-svg-icon name="arrow_downward" size="md"></app-svg-icon>
-                </button>
-                <button
-                  class="btn btn-icon"
-                  (click)="onEditExercise(i)"
-                  title="Edit">
-                  <app-svg-icon name="edit" size="md"></app-svg-icon>
-                </button>
-                <button
-                  class="btn btn-icon"
-                  (click)="onDeleteExercise(i)"
-                  title="Delete">
-                  <app-svg-icon name="delete" size="md"></app-svg-icon>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
+  <!-- TABLE -->
+  <div class="border border-outline-variant">
+    <div class="grid grid-cols-[2fr_1fr_auto] bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+      <span>Exercise</span><span>Category</span><span>Actions</span>
+    </div>
+    @if (filteredExercises().length === 0) {
+      <div class="px-3 py-4 text-xs text-outline-variant">&gt;&gt;&gt; NO_EXERCISES_FOUND</div>
     } @else {
-      <div class="empty-state">
-        <div class="empty-icon">
-          <app-svg-icon name="fitness_center" size="xl"></app-svg-icon>
+      @for (ex of filteredExercises(); track ex.id) {
+        <div class="grid grid-cols-[2fr_1fr_auto] items-center px-3 py-3 border-t border-outline-variant text-xs hover:bg-surface-container gap-2">
+          <div>
+            <div class="font-bold uppercase">{{ ex.name }}</div>
+            <div class="text-[9px] text-outline-variant">{{ ex.category }}</div>
+          </div>
+          <span class="border border-outline-variant text-[9px] uppercase px-1 py-0.5 text-on-surface-variant w-fit">{{ ex.category }}</span>
+          @if (confirmDeleteId() === ex.id) {
+            <div class="flex gap-2">
+              <button (click)="confirmDelete(ex.id)"
+                class="bg-error-container text-on-error-container text-[9px] uppercase px-2 py-1 font-bold">
+                CONFIRM_DEL
+              </button>
+              <button (click)="confirmDeleteId.set(null)"
+                class="border border-outline-variant text-[9px] uppercase px-2 py-1">
+                ABORT
+              </button>
+            </div>
+          } @else {
+            <div class="flex gap-2">
+              <button (click)="editExercise(ex.id)"
+                class="border border-outline-variant text-[9px] uppercase px-2 py-1 hover:border-primary hover:text-primary">
+                EDIT
+              </button>
+              <button (click)="confirmDeleteId.set(ex.id)"
+                class="border border-error-container text-error text-[9px] uppercase px-2 py-1 hover:bg-error-container">
+                DEL
+              </button>
+            </div>
+          }
         </div>
-        <h3>No exercises yet</h3>
-        <p>Add exercises to build your workout</p>
-        <button
-          (click)="onAddExercise()"
-          class="btn btn-primary">
-          <app-svg-icon name="add" size="md"></app-svg-icon>
-          Add First Exercise
-        </button>
-      </div>
+      }
     }
   </div>
 
-  <div class="bottom-actions">
-    <button
-      (click)="onBack()"
-      class="btn btn-secondary">
-      Back
-    </button>
-    <button
-      [disabled]="workoutData().exercises.length === 0 || isSaving()"
-      (click)="onSaveWorkout()"
-      class="btn btn-primary">
-      @if (isSaving()) {
-        <app-svg-icon name="refresh" size="md"></app-svg-icon>
-        <span>Saving...</span>
-      } @else {
-        <app-svg-icon name="save" size="md"></app-svg-icon>
-        <span>Save Workout</span>
-      }
-    </button>
-  </div>
 </div>

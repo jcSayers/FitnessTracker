@@ -1,185 +1,74 @@
-<div class="add-exercise-container">
-  <div class="header">
-    <button (click)="onCancel()" class="btn btn-secondary">
-      Cancel
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
+
+  <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary mb-1">MKDIR EXERCISE</h1>
+  <p class="text-[9px] uppercase tracking-widest text-outline mb-6">&gt; sudo create-exercise --type=strength</p>
+
+  <!-- NAME -->
+  <div class="mb-5">
+    <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Exercise Name</div>
+    <div class="flex items-center gap-2 border-b border-secondary bg-surface-container-lowest px-3 py-2 focus-within:bg-surface-container-highest">
+      <span class="text-outline">&gt;</span>
+      <input type="text" [(ngModel)]="nameValue"
+        class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1 placeholder-outline-variant uppercase"
+        placeholder="e.g. INCLINE_PRESS"/>
+    </div>
+  </div>
+
+  <!-- CATEGORY CHIPS -->
+  <div class="mb-5">
+    <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Category</div>
+    <div class="flex gap-2 flex-wrap">
+      @for (cat of CATEGORIES; track cat) {
+        <button (click)="selectedCategory.set(cat)"
+          class="border text-[9px] uppercase tracking-widest px-2 py-1"
+          [class.border-primary]="selectedCategory() === cat"
+          [class.text-primary]="selectedCategory() === cat"
+          [class.border-outline-variant]="selectedCategory() !== cat"
+          [class.text-on-surface-variant]="selectedCategory() !== cat">
+          {{ cat }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- EQUIPMENT CHIPS -->
+  <div class="mb-5">
+    <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Equipment</div>
+    <div class="flex gap-2 flex-wrap">
+      @for (eq of EQUIPMENT; track eq) {
+        <button (click)="selectedEquipment.set(eq)"
+          class="border text-[9px] uppercase tracking-widest px-2 py-1"
+          [class.border-primary]="selectedEquipment() === eq"
+          [class.text-primary]="selectedEquipment() === eq"
+          [class.border-outline-variant]="selectedEquipment() !== eq"
+          [class.text-on-surface-variant]="selectedEquipment() !== eq">
+          {{ eq }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- MUSCLE GROUP -->
+  <div class="mb-8">
+    <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Muscle Group</div>
+    <div class="flex items-center gap-2 border-b border-secondary bg-surface-container-lowest px-3 py-2 focus-within:bg-surface-container-highest">
+      <span class="text-outline">&gt;</span>
+      <input type="text" [(ngModel)]="notesValue"
+        class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1 placeholder-outline-variant"
+        placeholder="e.g. CHEST, TRICEPS"/>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="flex gap-3">
+    <button (click)="onCancel()"
+      class="flex-1 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-4 hover:border-primary hover:text-primary">
+      [ CANCEL ]
     </button>
-    <h1>{{ isEditMode ? 'Edit Exercise' : 'Create Exercise' }}</h1>
-    <button
-      (click)="onSave()"
-      [disabled]="exerciseForm.invalid"
-      class="btn btn-primary">
-      Done
+    <button (click)="onSave()"
+      class="flex-2 bg-primary text-on-primary text-[9px] uppercase tracking-widest px-6 py-4 font-bold hover:bg-on-surface hover:text-surface">
+      {{ isEditMode() ? '[ UPDATE_RECORD ]' : '[ WRITE_TO_DB ]' }}
     </button>
   </div>
 
-  <form [formGroup]="exerciseForm" class="exercise-form">
-    <!-- Exercise Name -->
-    <div class="form-group">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exercise Name</label>
-      <input
-        type="text"
-        formControlName="name"
-        [placeholder]="getPlaceholder(exerciseForm.get('category')?.value)"
-        autocomplete="off"
-        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-      @if (isFieldInvalid('name')) {
-        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('name') }}</p>
-      }
-    </div>
-
-    <!-- Category -->
-    <div class="form-section">
-      <label class="section-label">Type</label>
-      <select
-        formControlName="category"
-        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-        @for (category of exerciseCategories; track category) {
-          <option [value]="category">
-            {{ category | titlecase }}
-          </option>
-        }
-      </select>
-    </div>
-
-    <!-- Sets and Reps -->
-    <div class="form-section">
-      <label class="section-label">Sets & Reps</label>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sets</label>
-          <input
-            type="number"
-            formControlName="sets"
-            min="1"
-            max="20"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-          @if (isFieldInvalid('sets')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('sets') }}</p>
-          }
-        </div>
-
-        <div class="form-group">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reps (optional)</label>
-          <input
-            type="number"
-            formControlName="reps"
-            min="1"
-            max="100"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-          @if (isFieldInvalid('reps')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('reps') }}</p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Weight and Duration -->
-    <div class="form-section">
-      <label class="section-label">Load & Duration</label>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (optional)</label>
-          <div class="relative">
-            <input
-              type="number"
-              formControlName="weight"
-              min="0"
-              max="1000"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-12">
-            <span class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400 text-sm">kg</span>
-          </div>
-          @if (isFieldInvalid('weight')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('weight') }}</p>
-          }
-        </div>
-
-        <div class="form-group">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (optional)</label>
-          <div class="relative">
-            <input
-              type="number"
-              formControlName="duration"
-              min="1"
-              max="3600"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-12">
-            <span class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400 text-sm">sec</span>
-          </div>
-          @if (isFieldInvalid('duration')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('duration') }}</p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Rest Time -->
-    <div class="form-section">
-      <label class="section-label">Rest Between Sets</label>
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rest Time</label>
-        <div class="relative">
-          <input
-            type="number"
-            formControlName="restTime"
-            min="0"
-            max="600"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-20">
-          <span class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400 text-sm">seconds</span>
-        </div>
-        @if (isFieldInvalid('restTime')) {
-          <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('restTime') }}</p>
-        }
-      </div>
-    </div>
-
-    <!-- Superset -->
-    @if (exerciseForm.get('category')?.value === 'strength') {
-      <div class="form-section">
-        <label class="section-label">Superset (Optional)</label>
-        <div class="form-group">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pair with exercise</label>
-          <select
-            formControlName="isSupersetWith"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-            <option [value]="null">None - standalone exercise</option>
-            @for (exercise of getAvailableExercisesForSuperset(); track exercise.id) {
-              <option [value]="exercise.id">{{ exercise.name }}</option>
-            }
-          </select>
-          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Two exercises performed back-to-back without rest between them</p>
-        </div>
-      </div>
-    }
-
-    <!-- Dropset -->
-    @if (exerciseForm.get('category')?.value === 'strength' && exerciseForm.get('weight')?.value) {
-      <div class="form-section">
-        <label class="section-label">Dropset (Optional)</label>
-        <div class="form-group">
-          <label class="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              formControlName="isDropset"
-              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600">
-            <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">This is a dropset</span>
-          </label>
-          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Perform lighter weight with higher reps after the main exercise</p>
-        </div>
-      </div>
-    }
-
-    <!-- Notes -->
-    <div class="form-section">
-      <label class="section-label">Notes (Optional)</label>
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-        <textarea
-          formControlName="notes"
-          rows="3"
-          placeholder="Form cues, modifications, etc."
-          autocomplete="off"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none">
-        </textarea>
-      </div>
-    </div>
-  </form>
 </div>

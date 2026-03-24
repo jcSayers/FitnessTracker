@@ -31,6 +31,31 @@ export class WorkoutHistoryComponent implements OnInit {
   workoutStats = signal<WorkoutStats | null>(null);
   isLoading = signal(true);
 
+  flatSessions = computed<any[]>(() =>
+    this.workoutHistory().flatMap((g: WorkoutHistoryGroup) => g.workouts)
+  );
+
+  totalVolume = computed(() =>
+    this.flatSessions().reduce((acc: number, s: any) => acc + (s.totalVolume ?? 0), 0)
+  );
+
+  currentStreak = computed(() => {
+    const dates = new Set(
+      this.flatSessions().map((s: any) => {
+        const d = new Date(s.startTime);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      })
+    );
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      if (dates.has(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`)) streak++;
+      else if (i > 0) break;
+    }
+    return streak;
+  });
+
   // Computed property for calendar workout dates
   workoutDates = computed(() => {
     const dates: Date[] = [];

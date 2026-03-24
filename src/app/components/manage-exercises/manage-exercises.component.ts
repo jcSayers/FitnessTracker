@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ import { WorkoutTemplate, Exercise } from '../../models/workout.models';
   styleUrls: ['./manage-exercises.component.scss']
 })
 export class ManageExercisesComponent implements OnInit {
-  private router = inject(Router);
+  router = inject(Router);
   private workoutBuilder = inject(WorkoutBuilderService);
   private databaseService = inject(DatabaseService);
   private toastService = inject(ToastService);
@@ -26,6 +26,17 @@ export class ManageExercisesComponent implements OnInit {
   workoutData = signal(this.workoutBuilder.getWorkoutData());
   isSaving = signal(false);
   private lastDeleted: { exercise: Exercise; index: number } | null = null;
+
+  filterQuery     = signal('');
+  confirmDeleteId = signal<string | null>(null);
+
+  filteredExercises = computed(() => {
+    const q = this.filterQuery().toLowerCase();
+    const all = this.workoutData().exercises;
+    return q ? all.filter((e: any) =>
+      e.name.toLowerCase().includes(q) || (e.category ?? '').toLowerCase().includes(q)
+    ) : all;
+  });
 
   ngOnInit() {
     const data = this.workoutBuilder.getWorkoutData();
@@ -56,6 +67,18 @@ export class ManageExercisesComponent implements OnInit {
     this.workoutData.set(this.workoutBuilder.getWorkoutData());
 
     this.toastService.show('Exercise removed. Undo not yet available.', 'info', 4000);
+  }
+
+  async confirmDelete(id: string) {
+    this.confirmDeleteId.set(null);
+    const index = this.workoutData().exercises.findIndex((e: any) => e.id === id);
+    if (index !== -1) {
+      this.onDeleteExercise(index);
+    }
+  }
+
+  editExercise(id: string) {
+    this.router.navigate(['/add-exercise'], { queryParams: { id } });
   }
 
   onMoveUp(index: number) {

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>root@fitness // Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#d4d4d4",
+                        "on-tertiary": "#1b1c1c",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#000000",
+                        "on-surface": "#e2e2e2",
+                        "secondary-container": "#464747",
+                        "inverse-on-surface": "#303030",
+                        "primary": "#ffffff",
+                        "tertiary-fixed": "#5e5e5e",
+                        "surface-tint": "#c6c6c7",
+                        "tertiary-container": "#919090",
+                        "on-primary": "#1a1c1c",
+                        "on-tertiary-fixed": "#ffffff",
+                        "primary-fixed": "#5d5f5f",
+                        "primary-fixed-dim": "#454747",
+                        "on-secondary-container": "#e3e2e2",
+                        "surface-variant": "#353535",
+                        "surface-bright": "#393939",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#c6c6c6",
+                        "surface-dim": "#131313",
+                        "on-tertiary-fixed-variant": "#e4e2e2",
+                        "outline": "#919191",
+                        "background": "#131313",
+                        "on-primary-container": "#000000",
+                        "tertiary": "#e4e2e2",
+                        "inverse-primary": "#5d5f5f",
+                        "inverse-surface": "#e2e2e2",
+                        "secondary": "#c7c6c6",
+                        "on-primary-fixed": "#ffffff",
+                        "surface": "#131313",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "secondary-fixed-dim": "#ababab",
+                        "surface-container-low": "#1b1b1b",
+                        "tertiary-fixed-dim": "#464747",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#353535",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f1f",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "outline-variant": "#474747",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#3a3c3c",
+                        "secondary-fixed": "#c7c6c6",
+                        "on-secondary": "#1a1c1c"
+                    },
+                    fontFamily: {
+                        "headline": ["JetBrains Mono", "monospace"],
+                        "body": ["JetBrains Mono", "monospace"],
+                        "label": ["JetBrains Mono", "monospace"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "0px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            color: #e2e2e2;
+        }
+        .ascii-grid {
+            display: grid;
+            grid-template-columns: repeat(20, minmax(0, 1fr));
+            gap: 2px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-mono antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full border-b-2 border-zinc-800 bg-zinc-950 text-zinc-100 flex justify-between items-center px-4 h-16 w-full z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-zinc-100" data-icon="terminal">terminal</span>
+<span class="text-lg font-bold text-zinc-100 font-mono tracking-tight uppercase">root@fitness</span>
+</div>
+<div class="font-mono uppercase tracking-tight text-sm text-zinc-100">
+            [ 22:45:01 ]
+        </div>
+</header>
+<main class="pt-24 pb-32 px-4 max-w-5xl mx-auto space-y-8">
+<!-- Status & Progress Section -->
+<section class="space-y-4">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-4xl font-bold tracking-tighter uppercase">DASHBOARD_OVERVIEW</h1>
+<p class="text-on-surface-variant text-sm mt-1">SESSION_TYPE: STRENGTH_HYPERTROPHY</p>
+</div>
+<div class="text-right">
+<div class="text-xs text-on-surface-variant mb-1 uppercase tracking-widest">Global Rank: #4,209</div>
+<div class="bg-surface-container-lowest border border-outline-variant px-3 py-1 inline-block">
+<span class="text-primary font-bold">LVL 45</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-6">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs uppercase tracking-widest">XP_PROGRESSION</span>
+<span class="text-xs font-bold">45%</span>
+</div>
+<div class="text-xl tracking-tighter overflow-hidden whitespace-nowrap">
+<span class="text-primary">[||||||||||||||||||</span><span class="text-outline-variant">......................]</span>
+</div>
+</div>
+</section>
+<!-- Metrics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Heatmap / Activity Matrix -->
+<div class="md:col-span-2 bg-surface-container border border-outline-variant p-6">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-sm font-bold uppercase tracking-widest">INTENSITY_HEATMAP (20w x 7d)</h2>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter">DATA_STREAMS: ACTIVE</span>
+</div>
+<div class="ascii-grid text-center font-mono text-sm leading-none">
+<!-- Generating a 7x20 representative grid -->
+<!-- Week 1-20 Rows for Monday to Sunday -->
+<!-- Pattern of ., +, #, █ -->
+<div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div>
+<div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div>
+<div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div>
+<div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div>
+<div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div>
+<div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div>
+<div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-secondary">+</div><div class="text-primary">#</div><div class="text-primary">█</div><div class="text-primary">█</div><div class="text-primary">#</div><div class="text-secondary">+</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div><div class="text-on-surface-variant">.</div>
+</div>
+<div class="mt-8 flex justify-between items-center border-t border-outline-variant pt-4">
+<div class="text-[10px] text-on-surface-variant uppercase">Key: . Low | + Med | # High | █ Max</div>
+<button class="text-xs border border-primary px-3 py-1 hover:bg-primary hover:text-on-primary transition-none uppercase">Full_Report</button>
+</div>
+</div>
+<!-- Stats Module -->
+<div class="bg-surface-container border border-outline-variant p-6 flex flex-col justify-between">
+<div>
+<h2 class="text-sm font-bold uppercase tracking-widest mb-6">QUICK_STATS</h2>
+<div class="space-y-6">
+<div class="flex justify-between items-end">
+<span class="text-xs text-on-surface-variant uppercase">Total_Vol</span>
+<span class="text-2xl font-bold tracking-tighter">842.1k KG</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-xs text-on-surface-variant uppercase">Streak</span>
+<span class="text-2xl font-bold tracking-tighter">14_DAYS</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-xs text-on-surface-variant uppercase">Recovery</span>
+<span class="text-2xl font-bold tracking-tighter">82%</span>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<div class="text-[10px] text-on-surface-variant uppercase mb-2">System_Status: Optimal</div>
+<div class="h-1 bg-surface-container-highest">
+<div class="h-full bg-primary w-4/5"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Logs Section -->
+<section class="space-y-4">
+<h2 class="text-sm font-bold uppercase tracking-widest">LOG_RECORDS.EXE</h2>
+<div class="divide-y divide-outline-variant border border-outline-variant">
+<div class="p-4 bg-surface-container-low flex flex-col md:flex-row justify-between items-center hover:bg-surface-container transition-none group">
+<div class="flex items-center gap-6 w-full md:w-auto">
+<span class="text-on-surface-variant font-bold">[2024-03-23]</span>
+<span class="text-primary font-bold tracking-tighter">PUSH_DAY_A</span>
+</div>
+<div class="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0">
+<span class="text-secondary">12,400KG</span>
+<span class="text-xs px-2 py-0.5 bg-outline-variant text-primary uppercase">Completed</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform cursor-pointer" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low flex flex-col md:flex-row justify-between items-center hover:bg-surface-container transition-none group">
+<div class="flex items-center gap-6 w-full md:w-auto">
+<span class="text-on-surface-variant font-bold">[2024-03-21]</span>
+<span class="text-primary font-bold tracking-tighter">PULL_DAY_B</span>
+</div>
+<div class="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0">
+<span class="text-secondary">10,850KG</span>
+<span class="text-xs px-2 py-0.5 bg-outline-variant text-primary uppercase">Completed</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform cursor-pointer" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low flex flex-col md:flex-row justify-between items-center hover:bg-surface-container transition-none group">
+<div class="flex items-center gap-6 w-full md:w-auto">
+<span class="text-on-surface-variant font-bold">[2024-03-20]</span>
+<span class="text-primary font-bold tracking-tighter">LEGS_HYPERTROPHY</span>
+</div>
+<div class="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0">
+<span class="text-secondary">15,200KG</span>
+<span class="text-xs px-2 py-0.5 bg-outline-variant text-primary uppercase">Completed</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform cursor-pointer" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low flex flex-col md:flex-row justify-between items-center hover:bg-surface-container transition-none group">
+<div class="flex items-center gap-6 w-full md:w-auto">
+<span class="text-on-surface-variant font-bold">[2024-03-18]</span>
+<span class="text-primary font-bold tracking-tighter">REST_DAY</span>
+</div>
+<div class="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0">
+<span class="text-secondary">00,000KG</span>
+<span class="text-xs px-2 py-0.5 border border-outline-variant text-on-surface-variant uppercase">Recovery</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform cursor-pointer" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Technical Specs / ASCII Art placeholder -->
+<section class="border border-outline-variant p-4 bg-surface-container-lowest text-[10px] text-on-surface-variant leading-tight">
+<pre class="overflow-x-auto">SYSTEM_KERNEL: V.2.0.4-STABLE
+HARDWARE_ID: ATHLETE-7729-OMEGA
+&gt;&gt;&gt; LOADING_BIOMETRICS... OK
+&gt;&gt;&gt; CALIBRATING_SENSORS... OK
+&gt;&gt;&gt; ENCRYPTING_DATA... OK
+            </pre>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 bg-zinc-950 border-t border-zinc-800">
+<!-- Active Tab: DASH -->
+<a class="flex flex-col items-center justify-center bg-zinc-100 text-zinc-950 p-2 scale-100 min-w-[72px]" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">~/dash</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 p-2 min-w-[72px] hover:bg-zinc-900 transition-none" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">~/tmpl</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 p-2 min-w-[72px] hover:bg-zinc-900 transition-none" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">~/actv</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-500 p-2 min-w-[72px] hover:bg-zinc-900 transition-none" href="#">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+<span class="font-mono text-[10px] uppercase tracking-widest mt-1">~/sync</span>
+</a>
+</nav>
+</body></html>

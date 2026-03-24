@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { DatabaseService } from '../../services/database.service';
-import { RestTimerComponent } from '../rest-timer/rest-timer.component';
-import { SvgIconComponent, ToastService } from '../../shared';
+import { ToastService } from '../../shared';
 import {
   WorkoutTemplate,
   WorkoutInstance,
@@ -19,16 +18,14 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    SvgIconComponent,
-    RestTimerComponent
+    FormsModule
   ],
   templateUrl: './active-workout.component.html',
   styleUrls: ['./active-workout.component.scss']
 })
 export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  router = inject(Router);
   private databaseService = inject(DatabaseService);
   private toastService = inject(ToastService);
 
@@ -52,6 +49,46 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   // Workout progress
   completedSets = signal(0);
   totalSets = signal(0);
+
+  // Computed signals for terminal UI
+  currentExercise = computed(() => {
+    const t = this.workoutTemplate();
+    return t?.exercises[this.currentExerciseIndex()] ?? null;
+  });
+
+  formattedTime = computed(() => {
+    const t = this.elapsedTime();
+    const pad = (v: number) => v.toString().padStart(2, '0');
+    return `${pad(Math.floor(t / 3600))}:${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
+  });
+
+  formattedRest = computed(() => {
+    const t = this.restTimeRemaining();
+    return `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`;
+  });
+
+  setRows = computed(() => {
+    const ex = this.currentExercise();
+    if (!ex) return [];
+    const instance = this.workoutInstance();
+    const doneForThisExercise = instance?.sets?.filter(
+      (s: WorkoutSet) => s.exerciseId === ex.id
+    ).length ?? 0;
+    return Array.from({ length: ex.sets }, (_, i) => ({
+      number: i + 1,
+      completed: i < doneForThisExercise,
+      active: i === doneForThisExercise,
+    }));
+  });
+
+  asciiRestBar(remaining: number, total: number, width = 20): string {
+    const f = total > 0 ? Math.round(((total - remaining) / total) * width) : 0;
+    return '[' + '|'.repeat(f) + '.'.repeat(width - f) + ']';
+  }
+
+  addExercise() {
+    this.router.navigate(['/manage-exercises'], { queryParams: { context: 'workout' } });
+  }
 
   ngOnInit() {
     this.loadWorkout();
@@ -148,7 +185,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     // Find the first incomplete set
     let exerciseIndex = 0;
     let setIndex = 0;
-    let setCount = 0;
 
     for (const exercise of template.exercises) {
       for (let s = 0; s < exercise.sets; s++) {
@@ -162,7 +198,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
           this.initializeCurrentSet();
           return;
         }
-        setCount++;
       }
       exerciseIndex++;
     }
@@ -260,14 +295,16 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
         set.exerciseId === exercise.id && set.setNumber === setIndex + 1
       );
 
+      const updatedSets = [...instance.sets];
       if (existingSetIndex >= 0) {
-        instance.sets[existingSetIndex] = workoutSet;
+        updatedSets[existingSetIndex] = workoutSet;
       } else {
-        instance.sets.push(workoutSet);
+        updatedSets.push(workoutSet);
       }
 
-      await this.databaseService.updateWorkoutInstance(instance);
-      this.workoutInstance.set(instance);
+      const updatedInstance = { ...instance, sets: updatedSets };
+      await this.databaseService.updateWorkoutInstance(updatedInstance);
+      this.workoutInstance.set(updatedInstance);
       this.calculateProgress();
 
       // Start rest period if not the last set
@@ -345,8 +382,9 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       const instance = this.workoutInstance();
       if (!instance) return;
 
-      instance.status = WorkoutStatus.PAUSED;
-      await this.databaseService.updateWorkoutInstance(instance);
+      const updated = { ...instance, status: WorkoutStatus.PAUSED };
+      await this.databaseService.updateWorkoutInstance(updated);
+      this.workoutInstance.set(updated);
 
       this.isPaused.set(true);
       this.stopTimer();
@@ -363,8 +401,9 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       const instance = this.workoutInstance();
       if (!instance) return;
 
-      instance.status = WorkoutStatus.IN_PROGRESS;
-      await this.databaseService.updateWorkoutInstance(instance);
+      const updated = { ...instance, status: WorkoutStatus.IN_PROGRESS };
+      await this.databaseService.updateWorkoutInstance(updated);
+      this.workoutInstance.set(updated);
 
       this.isPaused.set(false);
       this.startTimer();
@@ -380,11 +419,14 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       const instance = this.workoutInstance();
       if (!instance) return;
 
-      instance.status = WorkoutStatus.COMPLETED;
-      instance.endTime = new Date();
-      instance.totalDuration = Math.floor(this.elapsedTime() / 60);
-
-      await this.databaseService.updateWorkoutInstance(instance);
+      const updated = {
+        ...instance,
+        status: WorkoutStatus.COMPLETED,
+        endTime: new Date(),
+        totalDuration: Math.floor(this.elapsedTime() / 60)
+      };
+      await this.databaseService.updateWorkoutInstance(updated);
+      this.workoutInstance.set(updated);
 
       this.stopTimer();
       this.stopRestTimer();
@@ -416,12 +458,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  getCurrentExercise(): Exercise | null {
-    const template = this.workoutTemplate();
-    const index = this.currentExerciseIndex();
-    return template && index < template.exercises.length ? template.exercises[index] : null;
-  }
-
   getProgressPercentage(): number {
     const completed = this.completedSets();
     const total = this.totalSets();
@@ -432,12 +468,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     const template = this.workoutTemplate();
     const exerciseIndex = this.currentExerciseIndex();
     return template ? exerciseIndex >= template.exercises.length : false;
-  }
-
-  formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
   private generateId(): string {

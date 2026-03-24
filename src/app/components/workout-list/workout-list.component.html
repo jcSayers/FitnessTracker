@@ -1,151 +1,79 @@
-<div class="workout-list-container">
-  <!-- Header with stats -->
-  <div class="stats-header glass-card">
-    <h1 class="text-primary text-2xl font-bold mb-4">Fitness Tracker</h1>
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
 
-    @if (workoutStats(); as stats) {
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-value text-accent">{{ stats.totalWorkouts }}</div>
-          <div class="stat-label text-secondary">Total Workouts</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value text-accent">{{ stats.currentStreak }}</div>
-          <div class="stat-label text-secondary">Day Streak</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value text-accent">{{ formatDuration(stats.averageDuration) }}</div>
-          <div class="stat-label text-secondary">Avg Duration</div>
-        </div>
-      </div>
-
-      <!-- Weekly progress -->
-      <div class="weekly-progress mt-4">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-primary font-medium">Weekly Goal</span>
-          <span class="text-secondary">{{ stats.weeklyProgress }} / {{ stats.weeklyGoal }}</span>
-        </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            [style.width.%]="getProgressPercentage()">
-          </div>
-        </div>
-      </div>
-    }
+  <!-- HEADER ROW -->
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary leading-none">DASHBOARD_OVERVIEW</h1>
+      <p class="text-[9px] uppercase tracking-widest text-outline mt-1">SESSION_TYPE: STRENGTH_TRAINING</p>
+    </div>
+    <span class="border border-outline-variant bg-surface-container-lowest px-2 py-1 text-[9px] uppercase tracking-widest text-on-surface-variant shrink-0">
+      LVL {{ level() }}
+    </span>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="quick-actions glass-card">
-    <h2 class="text-primary text-lg font-semibold mb-3">Quick Actions</h2>
-    <div class="action-buttons">
-      <button
-        (click)="viewHistory()"
-        class="action-btn bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
-        </svg>
-        Workout History
-      </button>
-      <button
-        (click)="createNewWorkout()"
-        class="action-btn bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-        Create Workout
-      </button>
+  <!-- XP BAR -->
+  <div class="bg-surface-container border border-outline-variant p-3 mb-4">
+    <div class="flex justify-between text-[9px] uppercase tracking-widest text-outline mb-2">
+      <span>XP_PROGRESSION</span><span>{{ xpProgress() }}%</span>
+    </div>
+    <pre class="text-xs text-primary leading-none tracking-tight">{{ asciiBar(xpProgress()) }}</pre>
+  </div>
+
+  <!-- METRICS GRID -->
+  <div class="grid grid-cols-3 gap-3 mb-4">
+    <div class="col-span-2 bg-surface-container border border-outline-variant p-3">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-2">INTENSITY_HEATMAP</div>
+      <div class="font-mono text-[10px] text-on-surface leading-snug">
+        @for (row of heatmapRows(); track $index) {
+          <div>{{ row }}</div>
+        }
+      </div>
+    </div>
+    <div class="bg-surface-container border border-outline-variant p-3 flex flex-col gap-3">
+      <div class="text-[9px] uppercase tracking-widest text-outline">QUICK_STATS</div>
+      <div>
+        <div class="text-[9px] uppercase text-outline">Total Vol</div>
+        <div class="text-xl font-bold text-primary">{{ totalVolume() }}<span class="text-[9px] text-outline">kg</span></div>
+      </div>
+      <div>
+        <div class="text-[9px] uppercase text-outline">Sessions</div>
+        <div class="text-xl font-bold text-primary">{{ recentSessions().length }}</div>
+      </div>
+      <div>
+        <div class="text-[9px] uppercase text-outline">Status</div>
+        <div class="text-[9px] uppercase text-on-surface-variant">NOMINAL</div>
+      </div>
     </div>
   </div>
 
-  <!-- Workout Templates -->
-  <div class="workout-templates">
-    <h2 class="text-primary text-lg font-semibold mb-4">Your Workouts</h2>
-
-    @if (isLoading()) {
-      <div class="loading-state">
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden">
-          <div class="bg-blue-600 h-full animate-pulse"></div>
-        </div>
-        <p class="text-secondary mt-4 text-center">Loading workouts...</p>
-      </div>
-    } @else if (workoutTemplates().length === 0) {
-      <div class="empty-state glass-card text-center">
-        <svg class="empty-icon text-secondary w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
-        </svg>
-        <h3 class="text-primary mb-2 text-lg font-semibold">No workouts yet</h3>
-        <p class="text-secondary mb-4">Create your first workout template to get started!</p>
-        <button
-          (click)="createNewWorkout()"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">
-          Create Workout
-        </button>
+  <!-- RECENT LOGS -->
+  <div class="mb-4">
+    <div class="text-[9px] uppercase tracking-widest text-outline border-b border-outline-variant pb-2 mb-2">LOG_RECORDS.EXE</div>
+    @if (recentSessions().length === 0) {
+      <div class="border border-outline-variant px-3 py-4 text-xs text-outline-variant">
+        &gt;&gt;&gt; NO_SESSIONS_FOUND — RUN FIRST WORKOUT
       </div>
     } @else {
-      <div class="workout-grid">
-        @for (workout of workoutTemplates(); track workout.id) {
-          <div class="workout-card bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            <div class="p-4">
-              <div class="workout-header flex justify-between items-start mb-3">
-                <div class="workout-info flex-1">
-                  <h3 class="workout-title text-lg font-bold text-gray-900 dark:text-white mb-1">{{ workout.name }}</h3>
-                  <p class="workout-subtitle text-sm text-gray-600 dark:text-gray-400">
-                    {{ workout.exercises.length }} exercises • {{ formatDuration(workout.estimatedDuration) }}
-                  </p>
-                </div>
-                <svg class="category-icon w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 24 24">
-                  <path [attr.d]="getCategoryIconPath(workout.category)"/>
-                </svg>
-              </div>
-
-              @if (workout.description) {
-                <p class="workout-description text-secondary text-sm mb-3">{{ workout.description }}</p>
-              }
-
-              <div class="workout-meta flex gap-2 mb-4">
-                <span
-                  [class]="'difficulty-' + workout.difficulty"
-                  class="difficulty-chip px-3 py-1 rounded-full text-xs font-medium">
-                  {{ workout.difficulty | titlecase }}
-                </span>
-                <span class="category-chip px-3 py-1 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                  {{ workout.category | titlecase }}
-                </span>
-              </div>
-            </div>
-
-            <div class="workout-actions flex gap-2 p-4 pt-0">
-              <button
-                (click)="editWorkout(workout)"
-                class="flex-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                </svg>
-                Edit
-              </button>
-              <button
-                (click)="startWorkout(workout)"
-                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                Start Workout
-              </button>
-            </div>
+      <div class="border border-outline-variant">
+        <div class="grid grid-cols-4 bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+          <span>Date</span><span>Session</span><span>Volume</span><span>Status</span>
+        </div>
+        @for (s of recentSessions(); track s.id) {
+          <div class="grid grid-cols-4 px-3 py-2 border-t border-outline-variant text-xs hover:bg-surface-container">
+            <span class="text-outline">{{ s.startTime | date:'MM-dd' }}</span>
+            <span class="font-bold uppercase truncate">{{ s.templateName }}</span>
+            <span class="text-on-surface-variant">{{ s.totalVolume ?? 0 }}kg</span>
+            <span class="border border-primary text-primary text-[9px] uppercase px-1 w-fit self-center">OK</span>
           </div>
         }
       </div>
     }
   </div>
 
-  <!-- Floating Action Button -->
-  <button
-    (click)="createNewWorkout()"
-    class="fab-add fixed bottom-20 right-6 bg-purple-600 hover:bg-purple-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors"
-    aria-label="Add new workout">
-    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-    </svg>
-  </button>
+  <!-- SYSTEM FOOTER -->
+  <pre class="text-[9px] text-outline-variant border border-outline-variant bg-surface-container-lowest p-3 overflow-x-auto leading-relaxed">SYSTEM_KERNEL: FitnessTracker v2.0 (terminal-build)
+HARDWARE_ID: local-device
+BOOT: offline-first database initialized
+SYNC: cloud sync engine active</pre>
+
 </div>

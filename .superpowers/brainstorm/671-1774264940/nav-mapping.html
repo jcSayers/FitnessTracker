@@ -1,0 +1,55 @@
+<h2>Navigation Mapping Question</h2>
+<p class="subtitle">The Stitch designs define 4 bottom-nav tabs. Your app has 6+ screens. How should the extras fit in?</p>
+
+<div class="section">
+  <h3>What the Stitch designs show</h3>
+  <div style="display:flex;gap:8px;margin-bottom:24px;background:#0e0e0e;padding:16px;font-family:monospace;border:1px solid #474747">
+    <div style="flex:1;text-align:center;background:#e2e2e2;color:#131313;padding:12px 8px;font-size:11px;font-weight:bold">
+      <div style="font-size:18px">⊞</div>~/dash
+    </div>
+    <div style="flex:1;text-align:center;color:#666;padding:12px 8px;font-size:11px">
+      <div style="font-size:18px">☰</div>~/tmpl
+    </div>
+    <div style="flex:1;text-align:center;color:#666;padding:12px 8px;font-size:11px">
+      <div style="font-size:18px">⊕</div>~/actv
+    </div>
+    <div style="flex:1;text-align:center;color:#666;padding:12px 8px;font-size:11px">
+      <div style="font-size:18px">⟳</div>~/sync
+    </div>
+  </div>
+
+  <h3>Screens without a tab slot</h3>
+  <ul style="margin:0 0 24px;padding-left:20px;line-height:2">
+    <li><code>/history</code> — Workout History &amp; Analytics</li>
+    <li><code>/manage-exercises</code> — Exercise CRUD</li>
+    <li><code>/add-exercise</code> — Create New Exercise</li>
+    <li><code>/create-workout</code> — Build Workout Template</li>
+  </ul>
+</div>
+
+<h3>Which navigation approach do you want?</h3>
+<p class="subtitle">Pick one</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Add a 5th tab: ~/hist</h3>
+      <p>History gets its own nav slot. Manage-exercises and add-exercise remain sub-pages reached from ~/tmpl (no nav tab needed).</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Keep exactly 4 tabs — history moves under ~/dash</h3>
+      <p>Dashboard shows recent workouts + a "VIEW_ALL_LOGS" link to history. No extra tab. Manage/add-exercise live under ~/tmpl.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Keep exactly 4 tabs — ~/tmpl becomes a hub</h3>
+      <p>~/tmpl tab covers templates, history, and exercise management via an in-page tabbed command menu. One tab, multiple modes.</p>
+    </div>
+  </div>
+</div>

@@ -37,9 +37,12 @@ export interface WorkoutTemplate {
 }
 
 export enum DifficultyLevel {
-  BEGINNER = 'beginner',
+  BEGINNER     = 'beginner',
   INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced'
+  ADVANCED     = 'advanced',
+  HYPERTROPHY  = 'hypertrophy',
+  ELITE        = 'elite',
+  BRUTAL       = 'brutal',
 }
 
 export enum WorkoutCategory {

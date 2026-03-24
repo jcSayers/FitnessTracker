@@ -1,0 +1,139 @@
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
+
+  <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary mb-6">SYNC_DAEMON</h1>
+
+  <!-- STATUS GRID -->
+  <div class="grid grid-cols-3 gap-0 mb-6">
+    <div class="bg-surface-container-low border border-outline-variant p-6 flex flex-col justify-between h-40">
+      <div class="text-[10px] uppercase tracking-widest text-outline">Network Status</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-bold tracking-tighter">
+          <ng-container *ngIf="isOnline()">PING... <span class="text-primary">[OK]</span></ng-container>
+          <ng-container *ngIf="!isOnline()"><span class="text-error">[OFFLINE]</span></ng-container>
+        </div>
+      </div>
+      <div class="text-[9px] text-outline-variant mt-1">TYPE: {{ effectiveType() }}</div>
+    </div>
+    <div class="bg-surface-container border-y border-r border-outline-variant p-6 flex flex-col justify-between h-40">
+      <div class="text-[10px] uppercase tracking-widest text-outline">Local Repository</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-bold tracking-tighter">{{ pendingCount() }}</div>
+        <div class="text-[10px] text-outline">PENDING</div>
+      </div>
+    </div>
+    <div class="bg-surface-container-high border-y border-r border-outline-variant p-6 flex flex-col justify-between h-40">
+      <div class="text-[10px] uppercase tracking-widest text-outline">Daemon Thread</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-bold tracking-tighter uppercase">
+          {{ isSyncing() ? 'SYNCING...' : 'IDLE' }}
+        </div>
+        <div class="flex gap-1 mb-1">
+          <div class="w-1 h-1" [class.bg-primary]="isSyncing()" [class.bg-outline-variant]="!isSyncing()"></div>
+          <div class="w-1 h-1 bg-outline-variant"></div>
+          <div class="w-1 h-1 bg-outline-variant"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG PANE -->
+  <div class="border border-outline-variant bg-surface-container-lowest overflow-hidden mb-6">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-outline-variant bg-surface-container">
+      <span class="text-[10px] font-bold tracking-widest text-outline uppercase">/var/log/fitness.sync.log</span>
+      <div class="flex gap-2">
+        <div class="w-2 h-2 border border-outline-variant"></div>
+        <div class="w-2 h-2 border border-outline-variant"></div>
+      </div>
+    </div>
+    <div #logPane class="p-4 h-80 overflow-y-auto font-mono text-xs leading-relaxed space-y-1 text-on-surface-variant">
+      @for (line of logLines(); track $index) {
+        <p>{{ line }}</p>
+      }
+      @if (logLines().length === 0) {
+        <p class="text-outline">&gt;&gt;&gt; NO_LOG_ENTRIES — AWAITING SYNC OPERATIONS...</p>
+        <p class="text-primary animate-pulse">_</p>
+      }
+    </div>
+  </div>
+
+  <!-- SYNC ACTION ROW -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-8 items-center mb-6">
+    <div class="md:col-span-3 space-y-2">
+      <div class="flex justify-between text-[10px] uppercase tracking-widest text-outline">
+        <span>Sync Progress</span>
+        <span>{{ isSyncing() ? 'RUNNING' : 'IDLE' }}</span>
+      </div>
+      <div class="w-full bg-surface-container-lowest h-1 border border-outline-variant overflow-hidden">
+        <div class="bg-primary h-full transition-none" [style.width]="syncProgress() + '%'"></div>
+      </div>
+      <div class="flex justify-between items-center py-2">
+        <span class="text-[10px] text-outline-variant">QUEUE_PENDING: {{ pendingCount() }}</span>
+        <span class="text-[10px] text-outline-variant">LAST_SYNC: {{ lastSyncTime() ? (lastSyncTime() | date:'HH:mm:ss') : 'NEVER' }}</span>
+        <span class="text-[10px] text-outline-variant">NET: {{ isOnline() ? 'ONLINE' : 'OFFLINE' }}</span>
+      </div>
+    </div>
+    <div class="md:col-span-1">
+      <button
+        (click)="triggerSync()"
+        [disabled]="isSyncing()"
+        class="w-full py-4 bg-primary text-on-primary font-bold uppercase tracking-widest text-sm hover:bg-on-surface hover:text-surface disabled:opacity-50">
+        {{ isSyncing() ? '[ SYNCING... ]' : '[ EXECUTE_SYNC ]' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- NETWORK TOPOLOGY + DAEMON STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 mb-6">
+    <div class="space-y-4">
+      <h2 class="text-sm font-bold uppercase tracking-[0.2em] border-l-4 border-primary pl-4">Network Topology</h2>
+      <div class="p-6 border border-outline-variant bg-surface-container-low font-mono text-[10px] leading-tight text-outline">
+        <pre>DAEMON_A --- [ENCRYPTED_TUNNEL] --- CLOUD_STORAGE
+    |                                   |
+    +--- LOCAL_CACHE ({{ pendingCount() }} PENDING) ----+
+    |                                   |
+    V                                   V
+[PHYSICAL_DATA] &lt;---&gt; [LOGICAL_MAPPING]</pre>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <h2 class="text-sm font-bold uppercase tracking-[0.2em] border-l-4 border-primary pl-4">Daemon Stats</h2>
+      <div class="space-y-2">
+        <div class="flex justify-between items-center p-3 border border-outline-variant">
+          <span class="text-[10px] uppercase">Network</span>
+          <span class="text-[10px]">{{ isOnline() ? '[CONNECTED]' : '[DISCONNECTED]' }}</span>
+        </div>
+        <div class="p-3 border border-outline-variant">
+          <span class="text-[10px] uppercase">Queue Fill</span>
+          <div class="text-[9px] text-on-surface-variant mt-2">
+            QUEUE_FILL<br/>
+            <span class="text-primary font-bold">{{ asciiBar(pendingCount(), 100) }}</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center p-3 border border-outline-variant">
+          <span class="text-[10px] uppercase">Daemon</span>
+          <span class="text-[10px]">{{ isSyncing() ? '[SYNCING]' : '[IDLE]' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT -->
+  <div class="grid grid-cols-2 gap-3">
+    <button
+      (click)="onExport()"
+      class="bg-primary text-on-primary text-[9px] uppercase tracking-widest py-3 font-bold hover:bg-on-surface hover:text-surface">
+      [ EXPORT_DATA ]
+    </button>
+    <button
+      (click)="onImport()"
+      class="border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-3 hover:border-primary hover:text-primary">
+      [ IMPORT_DATA ]
+    </button>
+    @if (importError()) {
+      <div class="col-span-2 text-[9px] text-error uppercase tracking-widest mt-2">
+        &gt;&gt;&gt; {{ importError() }}
+      </div>
+    }
+  </div>
+
+</div>

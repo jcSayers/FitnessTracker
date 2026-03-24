@@ -1,113 +1,95 @@
-<div class="create-workout-container">
-  <div class="header">
-    <button (click)="onCancel()" class="back-button p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
-    </button>
-    <h1>Create Workout</h1>
-  </div>
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
 
-  <form [formGroup]="workoutForm" (ngSubmit)="onNext()" class="workout-form">
-    <div class="form-section bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4">
-      <div class="section-title flex items-center gap-2 mb-4">
-        <app-svg-icon name="info" size="md" color="primary"></app-svg-icon>
-        <h2 class="text-lg font-semibold">Workout Information</h2>
+  <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary mb-1">COMPILE ROUTINE</h1>
+  <p class="text-[9px] uppercase tracking-widest text-outline mb-6">&gt; vim ./templates/new_routine.json</p>
+
+  <form [formGroup]="workoutForm" (ngSubmit)="onNext()">
+
+    <!-- NAME -->
+    <div class="mb-5">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Routine Name</div>
+      <div class="flex items-center gap-2 border-b border-secondary bg-surface-container-lowest px-3 py-2 focus-within:bg-surface-container-highest">
+        <span class="text-outline">&gt;</span>
+        <input type="text" formControlName="name"
+          class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1 placeholder-outline-variant uppercase"
+          placeholder="e.g. PUSH_DAY_V2"
+          autocomplete="off"/>
       </div>
+      @if (isFieldInvalid('name')) {
+        <p class="mt-1 text-[9px] uppercase tracking-widest text-error">{{ getFieldError('name') }}</p>
+      }
+    </div>
 
+    <!-- META ROW -->
+    <div class="grid grid-cols-2 gap-3 mb-5">
       <div>
-        <!-- Workout Name -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Workout Name</label>
-          <input
-            type="text"
-            formControlName="name"
-            placeholder="e.g., Upper Body Strength"
-            autocomplete="off"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-          @if (isFieldInvalid('name')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('name') }}</p>
+        <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Difficulty</div>
+        <select formControlName="difficulty"
+          class="w-full bg-surface-container-lowest border-b border-outline-variant text-on-surface font-mono text-xs px-3 py-2 uppercase outline-none appearance-none">
+          @for (opt of difficultyOptions; track opt) {
+            <option [value]="opt">[ {{ opt.toUpperCase() }} ]</option>
           }
-        </div>
-
-        <!-- Description -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
-          <textarea
-            formControlName="description"
-            rows="3"
-            placeholder="Describe your workout..."
-            autocomplete="off"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none">
-          </textarea>
-        </div>
-
-        <!-- Category and Difficulty -->
-        <div class="form-row grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-            <select
-              formControlName="category"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-              @for (category of workoutCategories; track category) {
-                <option [value]="category">
-                  {{ category | titlecase }}
-                </option>
-              }
-            </select>
-            @if (isFieldInvalid('category')) {
-              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('category') }}</p>
-            }
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
-            <select
-              formControlName="difficulty"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-              @for (difficulty of difficultyLevels; track difficulty) {
-                <option [value]="difficulty">
-                  {{ difficulty | titlecase }}
-                </option>
-              }
-            </select>
-            @if (isFieldInvalid('difficulty')) {
-              <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('difficulty') }}</p>
-            }
-          </div>
-        </div>
-
-        <!-- Estimated Duration -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Duration</label>
-          <div class="relative">
-            <input
-              type="number"
-              formControlName="estimatedDuration"
-              min="5"
-              max="300"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-20">
-            <span class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400">minutes</span>
-          </div>
-          @if (isFieldInvalid('estimatedDuration')) {
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ getFieldError('estimatedDuration') }}</p>
+        </select>
+        @if (isFieldInvalid('difficulty')) {
+          <p class="mt-1 text-[9px] uppercase tracking-widest text-error">{{ getFieldError('difficulty') }}</p>
+        }
+      </div>
+      <div>
+        <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Category</div>
+        <select formControlName="category"
+          class="w-full bg-surface-container-lowest border-b border-outline-variant text-on-surface font-mono text-xs px-3 py-2 uppercase outline-none appearance-none">
+          @for (opt of categoryOptions; track opt) {
+            <option [value]="opt">[ {{ opt.toUpperCase() }} ]</option>
           }
-        </div>
+        </select>
+        @if (isFieldInvalid('category')) {
+          <p class="mt-1 text-[9px] uppercase tracking-widest text-error">{{ getFieldError('category') }}</p>
+        }
       </div>
     </div>
 
-    <!-- Form Actions -->
-    <div class="form-actions flex justify-between gap-4">
-      <button
-        type="button"
-        (click)="onCancel()"
-        class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-        Cancel
+    <!-- ESTIMATED DURATION -->
+    <div class="mb-5">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Estimated Duration (minutes)</div>
+      <div class="flex items-center gap-2 border-b border-secondary bg-surface-container-lowest px-3 py-2 focus-within:bg-surface-container-highest">
+        <span class="text-outline">&gt;</span>
+        <input type="number" formControlName="estimatedDuration" min="5" max="300"
+          class="bg-transparent border-none outline-none text-on-surface font-mono text-xs flex-1"/>
+      </div>
+      @if (isFieldInvalid('estimatedDuration')) {
+        <p class="mt-1 text-[9px] uppercase tracking-widest text-error">{{ getFieldError('estimatedDuration') }}</p>
+      }
+    </div>
+
+    <!-- EXERCISE QUEUE -->
+    <div class="mb-5">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-2">Exercise Queue</div>
+      <div class="border border-outline-variant">
+        <div class="grid grid-cols-[2rem_1fr_auto] bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+          <span>#</span><span class="pl-2">Exercise</span><span>Sets×Reps</span>
+        </div>
+        <div class="px-3 py-3 border-t border-outline-variant text-[9px] uppercase tracking-widest text-outline-variant text-center">
+          [ EXERCISES CONFIGURED ON NEXT STEP ]
+        </div>
+        <button type="button" (click)="onNext()"
+          class="w-full border-t border-outline-variant text-outline-variant text-[9px] uppercase tracking-widest py-3 hover:bg-surface-container hover:text-primary text-center">
+          [ ADD_EXERCISE_TO_QUEUE ]
+        </button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="flex gap-3">
+      <button type="button" (click)="onCancel()"
+        class="flex-1 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-4 hover:border-primary hover:text-primary">
+        [ DISCARD ]
       </button>
-      <button
-        type="submit"
-        class="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-        <span>Next: Add Exercises</span>
-        <app-svg-icon name="arrow_forward" size="md"></app-svg-icon>
+      <button type="submit"
+        class="flex-2 bg-primary text-on-primary text-[9px] uppercase tracking-widest px-6 py-4 font-bold hover:bg-on-surface hover:text-surface">
+        [ SAVE_ROUTINE ]
       </button>
     </div>
+
   </form>
+
 </div>

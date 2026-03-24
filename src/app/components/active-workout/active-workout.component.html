@@ -1,185 +1,152 @@
-<div class="active-workout-container">
-  <!-- Header with workout timer -->
-  <div class="workout-header">
-    <button class="btn btn-icon" (click)="goBack()" title="Go back">
-      <app-svg-icon name="arrow_back" size="lg"></app-svg-icon>
-    </button>
+<div class="min-h-screen bg-background p-4 font-mono text-on-surface">
 
-    @if (workoutTemplate(); as template) {
-      <div class="header-info">
-        <h1 class="workout-name">{{ template.name }}</h1>
-        <div class="workout-timer">{{ formatTime(elapsedTime()) }}</div>
+  @if (!workoutTemplate()) {
+    <div class="text-xs text-outline p-4">&gt;&gt;&gt; LOADING_SESSION...</div>
+  } @else {
+
+    <!-- TIMER -->
+    <div class="bg-surface-container border border-outline-variant p-4 mb-4 text-center">
+      <div class="text-[9px] uppercase tracking-widest text-outline mb-1">SYSTEM_UPTIME</div>
+      <div class="text-6xl font-bold tracking-tighter text-primary tabular-nums">{{ formattedTime() }}</div>
+      <div class="flex justify-center gap-4 mt-2 text-[9px] uppercase tracking-widest text-outline-variant">
+        <span>[KCAL: 0]</span><span>[HR: --BPM]</span>
+      </div>
+    </div>
+
+    <!-- PRE-WORKOUT: not yet started -->
+    @if (!isWorkoutActive()) {
+      <div class="border border-outline-variant p-4 mb-4">
+        <div class="text-[9px] uppercase tracking-widest text-outline mb-3">&gt;&gt; QUEUED_EXERCISES</div>
+        @if (workoutTemplate(); as template) {
+          @for (exercise of template.exercises; track exercise.id; let i = $index) {
+            <div class="flex items-center gap-3 py-2 border-b border-outline-variant text-xs">
+              <span class="text-outline w-5">{{ (i + 1).toString().padStart(2,'0') }}</span>
+              <span class="uppercase font-bold">{{ exercise.name }}</span>
+              <span class="text-on-surface-variant ml-auto">{{ exercise.sets }}×{{ exercise.reps || (exercise.duration + 's') }}</span>
+            </div>
+          }
+          <button (click)="startWorkout()"
+            class="mt-4 w-full bg-primary text-on-primary text-[9px] uppercase tracking-widest py-3 font-bold hover:bg-on-surface hover:text-surface">
+            &gt; [BOOT_SESSION]
+          </button>
+        }
       </div>
     }
-  </div>
 
-  <!-- Pre-Workout State -->
-  @if (!isWorkoutActive()) {
-    <div class="pre-workout">
-      @if (workoutTemplate(); as template) {
-        <div class="workout-preview">
-          <h2>Ready to start?</h2>
-          <div class="exercise-list">
-            @for (exercise of template.exercises; track exercise.id; let i = $index) {
-              <div class="exercise-preview-item">
-                <div class="exercise-number">{{ i + 1 }}</div>
-                <div class="exercise-info">
-                  <div class="exercise-name">{{ exercise.name }}</div>
-                  <div class="exercise-details">
-                    {{ exercise.sets }}×{{ exercise.reps || exercise.duration + 's' }}
-                    @if (exercise.weight) {
-                      {{ exercise.weight }}lb
-                    }
-                  </div>
-                </div>
-              </div>
-            }
+    <!-- ACTIVE WORKOUT -->
+    @if (isWorkoutActive() && !isWorkoutComplete()) {
+
+      <!-- CURRENT EXERCISE -->
+      @if (currentExercise(); as ex) {
+        <div class="border-l-2 border-primary pl-3 mb-4">
+          <div class="text-[9px] uppercase tracking-widest text-outline mb-1">&gt;&gt; CURRENT_EXERCISE</div>
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-2xl font-bold uppercase tracking-tight truncate">{{ ex.name }}</h2>
+            <span class="border border-outline-variant text-[9px] uppercase px-1 py-0.5 text-on-surface-variant shrink-0">
+              LVL {{ currentExerciseIndex() + 1 }}
+            </span>
+            <span class="border border-outline-variant text-[9px] uppercase px-1 py-0.5 text-on-surface-variant shrink-0">
+              PR: --
+            </span>
           </div>
-          <button class="btn btn-primary start-button" (click)="startWorkout()">
-            <app-svg-icon name="play" size="md"></app-svg-icon>
-            Start Workout
-          </button>
         </div>
-      }
-    </div>
-  }
 
-  <!-- Active Workout State -->
-  @if (isWorkoutActive() && !isWorkoutComplete()) {
-    <div class="active-workout-content">
-      <!-- Exercise List with Set Circles -->
-      @if (workoutTemplate(); as template) {
-        <div class="exercises-list">
-          @for (exercise of template.exercises; track exercise.id; let exerciseIndex = $index) {
-            <div class="exercise-card"
-                 [class.current]="currentExerciseIndex() === exerciseIndex">
-              <div class="exercise-header">
-                <div class="exercise-title">
-                  <div class="exercise-name">{{ exercise.name }}</div>
-                  <div class="exercise-target">
-                    {{ exercise.sets }}×{{ exercise.reps || (exercise.duration + 's') }}
-                    @if (exercise.weight) {
-                      {{ exercise.weight }}lb
-                    }
-                  </div>
+        <!-- REST TIMER -->
+        @if (isRestPeriod()) {
+          <div class="bg-surface-container-high border border-outline-variant p-3 mb-4 text-center">
+            <div class="text-[9px] uppercase tracking-widest text-outline mb-1">[ REST: {{ formattedRest() }} ]</div>
+            <pre class="text-xs text-primary">{{ asciiRestBar(restTimeRemaining(), ex.restTime ?? 60) }}</pre>
+            <button (click)="skipRest()"
+              class="mt-2 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest px-3 py-1 hover:border-primary hover:text-primary">
+              SKIP_REST
+            </button>
+          </div>
+        }
+
+        <!-- SET TABLE -->
+        <div class="border border-outline-variant mb-4">
+          <div class="grid grid-cols-3 bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+            <span>Set</span><span>Kg × Reps</span><span>Status</span>
+          </div>
+          @for (row of setRows(); track row.number) {
+            <div class="grid grid-cols-3 items-center px-3 py-3 border-t border-outline-variant text-xs"
+                 [class.opacity-40]="row.completed">
+              <span class="font-bold">{{ row.number.toString().padStart(2,'0') }}</span>
+              @if (row.active) {
+                <div class="flex items-center gap-1">
+                  <input type="number" [ngModel]="currentSet().weight"
+                    (ngModelChange)="currentSet.set({...currentSet(), weight: $event})"
+                    placeholder="kg"
+                    class="w-12 bg-surface-container-lowest border-b border-secondary text-primary text-xs text-center outline-none font-mono"/>
+                  <span class="text-outline-variant">×</span>
+                  <input type="number" [ngModel]="currentSet().reps"
+                    (ngModelChange)="currentSet.set({...currentSet(), reps: $event})"
+                    placeholder="reps"
+                    class="w-12 bg-surface-container-lowest border-b border-secondary text-primary text-xs text-center outline-none font-mono"/>
                 </div>
-              </div>
-
-              <!-- Set Tracking Circles (StrongLifts style) -->
-              <div class="set-circles">
-                @for (setIndex of getExerciseSets(exercise); track setIndex) {
-                  <div class="set-circle"
-                       [class.completed]="isSetCompleted(exercise, setIndex)"
-                       [class.current]="isCurrentSet(exerciseIndex, setIndex)">
-                    {{ setIndex + 1 }}
-                  </div>
-                }
-              </div>
-
-              <!-- Current Set Input (only show for current exercise) -->
-              @if (currentExerciseIndex() === exerciseIndex && !isRestPeriod()) {
-                <div class="set-input-section">
-                  <div class="input-row">
-                    @if (exercise.reps || currentSet().reps !== undefined) {
-                      <div class="form-group">
-                        <label class="label">Reps</label>
-                        <input class="custom-input" type="number" [(ngModel)]="currentSet().reps" min="1" placeholder="0">
-                      </div>
-                    }
-
-                    @if (exercise.weight || currentSet().weight !== undefined) {
-                      <div class="form-group">
-                        <label class="label">Weight</label>
-                        <div class="input-with-suffix">
-                          <input class="custom-input" type="number" [(ngModel)]="currentSet().weight" min="0" step="5" placeholder="0">
-                          <span class="input-suffix">lbs</span>
-                        </div>
-                      </div>
-                    }
-
-                    @if (exercise.duration || currentSet().duration !== undefined) {
-                      <div class="form-group">
-                        <label class="label">Duration</label>
-                        <div class="input-with-suffix">
-                          <input class="custom-input" type="number" [(ngModel)]="currentSet().duration" min="1" placeholder="0">
-                          <span class="input-suffix">sec</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
-
-                  @if (exercise.notes) {
-                    <div class="exercise-notes">
-                      <app-svg-icon name="info" size="md" color="primary"></app-svg-icon>
-                      <span>{{ exercise.notes }}</span>
-                    </div>
-                  }
-
-                  <button class="btn btn-primary complete-set-btn" (click)="completeSet()">
-                    <app-svg-icon name="check" size="md"></app-svg-icon>
-                    Complete Set
-                  </button>
-                </div>
+              } @else {
+                <span class="text-on-surface-variant">—</span>
+              }
+              @if (row.completed) {
+                <span class="material-symbols-outlined text-sm text-on-surface-variant">check_circle</span>
+              } @else if (row.active) {
+                <button (click)="completeSet()"
+                  class="bg-primary text-on-primary text-[9px] uppercase px-2 py-1 font-bold tracking-widest hover:bg-on-surface hover:text-surface w-fit">
+                  LOG_SET
+                </button>
+              } @else {
+                <span class="text-outline-variant text-[9px]">—</span>
               }
             </div>
           }
         </div>
-      }
 
-      <!-- Rest Timer Overlay (StrongLifts style) -->
-      @if (isRestPeriod()) {
-        <div class="rest-timer-overlay">
-          <app-rest-timer
-            [restDuration]="restTimeRemaining()"
-            [autoStart]="true"
-            (timerComplete)="onRestTimerComplete()"
-            (timerDismissed)="onRestTimerDismissed()">
-          </app-rest-timer>
+        <!-- PAUSE/RESUME CONTROL -->
+        <div class="flex gap-3 mb-3">
+          @if (isPaused()) {
+            <button (click)="resumeWorkoutFromPause()"
+              class="flex-1 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-3 hover:border-primary hover:text-primary">
+              &gt; RESUME_SESSION
+            </button>
+          } @else {
+            <button (click)="pauseWorkout()"
+              class="flex-1 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-3 hover:border-primary hover:text-primary">
+              || PAUSE_SESSION
+            </button>
+          }
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex gap-3">
+          <button (click)="addExercise()"
+            class="flex-1 border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest py-3 hover:border-primary hover:text-primary">
+            + ADD_EXERCISE
+          </button>
+          <button (click)="finishWorkout()"
+            class="flex-2 bg-primary text-on-primary text-[9px] uppercase tracking-widest px-4 py-3 font-bold hover:bg-on-surface hover:text-surface">
+            &gt; [FINISH_SESSION]
+          </button>
         </div>
       }
+    }
 
-      <!-- Bottom Controls -->
-      <div class="bottom-controls">
-        @if (isPaused()) {
-          <button class="btn btn-icon btn-primary fab" (click)="resumeWorkoutFromPause()" title="Resume workout">
-            <app-svg-icon name="play" size="lg"></app-svg-icon>
-          </button>
-        } @else {
-          <button class="btn btn-icon fab pause-btn" (click)="pauseWorkout()" title="Pause workout">
-            <app-svg-icon name="pause" size="lg"></app-svg-icon>
-          </button>
-        }
-
-        <button class="btn btn-icon btn-danger fab" (click)="finishWorkout()" title="Stop workout">
-          <app-svg-icon name="stop" size="lg"></app-svg-icon>
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- Workout Complete State -->
-  @if (isWorkoutComplete()) {
-    <div class="workout-complete">
-      <div class="complete-content">
-        <div class="complete-icon">
-          <app-svg-icon name="check" size="xl" color="success"></app-svg-icon>
-        </div>
-        <h2>Workout Complete!</h2>
-        <div class="completion-stats">
-          <div class="stat">
-            <span class="stat-label">Duration</span>
-            <span class="stat-value">{{ formatTime(elapsedTime()) }}</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Sets Completed</span>
-            <span class="stat-value">{{ completedSets() }}</span>
+    <!-- WORKOUT COMPLETE -->
+    @if (isWorkoutComplete()) {
+      <div class="border border-outline-variant p-6 text-center">
+        <div class="text-[9px] uppercase tracking-widest text-outline mb-4">SESSION_COMPLETE</div>
+        <div class="text-4xl font-bold text-primary mb-4">{{ formattedTime() }}</div>
+        <div class="flex justify-center gap-8 text-xs mb-6">
+          <div>
+            <div class="text-[9px] uppercase tracking-widest text-outline mb-1">SETS_LOGGED</div>
+            <div class="text-2xl font-bold">{{ completedSets() }}</div>
           </div>
         </div>
-        <button class="btn btn-primary" (click)="finishWorkout()">
-          <app-svg-icon name="check" size="md"></app-svg-icon>
-          Finish Workout
+        <button (click)="finishWorkout()"
+          class="w-full bg-primary text-on-primary text-[9px] uppercase tracking-widest py-3 font-bold hover:bg-on-surface hover:text-surface">
+          &gt; [COMMIT_SESSION]
         </button>
       </div>
-    </div>
+    }
+
   }
 </div>

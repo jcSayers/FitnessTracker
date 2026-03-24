@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Undesigned Screens — Terminal Aesthetic</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; }
+  body { background: #0a0a0a; color: #e2e2e2; font-family: 'JetBrains Mono', monospace; padding: 24px; }
+  h1 { font-size: 13px; color: #919191; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px; }
+  .subtitle { font-size: 11px; color: #474747; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .screen-wrap { }
+  .screen-label { font-size: 10px; color: #919191; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; padding-left: 4px; }
+  .phone { background: #131313; border: 1px solid #474747; width: 100%; height: 520px; overflow: hidden; display: flex; flex-direction: column; }
+  .topbar { background: #0e0e0e; border-bottom: 2px solid #2a2a2a; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; flex-shrink: 0; }
+  .topbar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .topbar-time { font-size: 10px; color: #474747; }
+  .page-body { flex: 1; overflow: hidden; padding: 12px; }
+  .section-header { font-size: 9px; color: #919191; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 10px; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #1f1f1f; }
+  .stat-label { font-size: 9px; color: #919191; text-transform: uppercase; }
+  .stat-value { font-size: 14px; font-weight: 700; }
+  .log-row { display: flex; justify-content: space-between; padding: 7px 8px; border-bottom: 1px solid #1f1f1f; font-size: 9px; }
+  .log-row:hover { background: #1f1f1f; }
+  .log-date { color: #474747; }
+  .log-name { color: #e2e2e2; font-weight: 700; text-transform: uppercase; }
+  .log-vol { color: #919191; }
+  .tag { background: #1f1f1f; border: 1px solid #474747; padding: 1px 5px; font-size: 8px; text-transform: uppercase; color: #919191; }
+  .tag.ok { border-color: #e2e2e2; color: #e2e2e2; }
+  .ex-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 7px 8px; border-bottom: 1px solid #1f1f1f; font-size: 9px; }
+  .ex-name { font-weight: 700; text-transform: uppercase; }
+  .ex-meta { color: #474747; font-size: 8px; }
+  .btn-sm { background: #e2e2e2; color: #131313; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 3px 7px; border: none; cursor: pointer; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .btn-outline { background: transparent; color: #e2e2e2; border: 1px solid #474747; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 3px 7px; cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+  .form-group { margin-bottom: 10px; }
+  .form-label { font-size: 8px; color: #919191; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
+  .form-input { background: #0e0e0e; border: none; border-bottom: 1px solid #474747; color: #e2e2e2; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 5px 8px; width: 100%; outline: none; }
+  .form-input::placeholder { color: #353535; }
+  .prompt-prefix { color: #474747; margin-right: 6px; }
+  .ex-chip { display: inline-block; background: #1f1f1f; border: 1px solid #353535; padding: 2px 6px; font-size: 8px; margin: 2px; text-transform: uppercase; }
+  .ascii-bar { font-size: 9px; letter-spacing: -0.5px; overflow: hidden; white-space: nowrap; }
+  .ascii-bar .fill { color: #e2e2e2; }
+  .ascii-bar .empty { color: #353535; }
+  .bottomnav { background: #0e0e0e; border-top: 1px solid #2a2a2a; height: 44px; display: flex; flex-shrink: 0; }
+  .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; text-transform: uppercase; color: #474747; letter-spacing: 0.08em; gap: 2px; }
+  .nav-tab.active { background: #e2e2e2; color: #131313; }
+  .nav-icon { font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>4 Screens Without Stitch Designs</h1>
+<p class="subtitle">Proposed terminal-aesthetic layouts — all follow kernel_core/DESIGN.md · Click a screen to select it</p>
+
+<div class="screens">
+
+  <!-- HISTORY -->
+  <div class="screen-wrap">
+    <div class="screen-label">1 / ~/hist — Workout History</div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="topbar-title">⬛ root@fitness</span>
+        <span class="topbar-time">[ 22:45:01 ]</span>
+      </div>
+      <div class="page-body" style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:-0.02em">HISTORY.LOG</div>
+          <div style="font-size:8px;color:#474747;margin-top:2px">cat /var/log/sessions/* | sort -r</div>
+        </div>
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="background:#1f1f1f;border:1px solid #353535;padding:8px 6px">
+            <div style="font-size:7px;color:#474747;text-transform:uppercase;margin-bottom:3px">Total Vol</div>
+            <div style="font-size:12px;font-weight:700">842k<span style="font-size:8px;color:#919191">kg</span></div>
+          </div>
+          <div style="background:#1f1f1f;border:1px solid #353535;padding:8px 6px">
+            <div style="font-size:7px;color:#474747;text-transform:uppercase;margin-bottom:3px">Sessions</div>
+            <div style="font-size:12px;font-weight:700">147</div>
+          </div>
+          <div style="background:#1f1f1f;border:1px solid #353535;padding:8px 6px">
+            <div style="font-size:7px;color:#474747;text-transform:uppercase;margin-bottom:3px">Streak</div>
+            <div style="font-size:12px;font-weight:700">14<span style="font-size:8px;color:#919191">d</span></div>
+          </div>
+        </div>
+        <!-- Log list -->
+        <div style="border:1px solid #353535;flex:1;overflow:hidden">
+          <div style="background:#1f1f1f;border-bottom:1px solid #353535;padding:5px 8px;display:flex;justify-content:space-between;font-size:8px;color:#474747;text-transform:uppercase">
+            <span>Date</span><span>Session</span><span>Volume</span><span>Status</span>
+          </div>
+          <div class="log-row"><span class="log-date">[03-23]</span><span class="log-name">PUSH_A</span><span class="log-vol">12.4k</span><span class="tag ok">OK</span></div>
+          <div class="log-row"><span class="log-date">[03-21]</span><span class="log-name">PULL_B</span><span class="log-vol">10.8k</span><span class="tag ok">OK</span></div>
+          <div class="log-row"><span class="log-date">[03-20]</span><span class="log-name">LEGS_V2</span><span class="log-vol">15.2k</span><span class="tag ok">OK</span></div>
+          <div class="log-row"><span class="log-date">[03-18]</span><span class="log-name">REST_DAY</span><span class="log-vol">0</span><span class="tag">RCV</span></div>
+          <div class="log-row"><span class="log-date">[03-17]</span><span class="log-name">PUSH_A</span><span class="log-vol">11.9k</span><span class="tag ok">OK</span></div>
+          <div class="log-row"><span class="log-date">[03-15]</span><span class="log-name">FULL_BODY</span><span class="log-vol">9.2k</span><span class="tag ok">OK</span></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="nav-tab"><span class="nav-icon">⊞</span>~/dash</div>
+        <div class="nav-tab"><span class="nav-icon">☰</span>~/tmpl</div>
+        <div class="nav-tab"><span class="nav-icon">⊕</span>~/actv</div>
+        <div class="nav-tab active"><span class="nav-icon">◈</span>~/hist</div>
+        <div class="nav-tab"><span class="nav-icon">⟳</span>~/sync</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE EXERCISES -->
+  <div class="screen-wrap">
+    <div class="screen-label">2 / ~/tmpl → manage-exercises</div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="topbar-title">⬛ root@fitness</span>
+        <span class="topbar-time">[ 22:45:01 ]</span>
+      </div>
+      <div class="page-body" style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end">
+          <div>
+            <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:-0.02em">EXERCISES.DB</div>
+            <div style="font-size:8px;color:#474747;margin-top:2px">ls -la ./exercises/ | grep -v deprecated</div>
+          </div>
+          <button class="btn-sm">+ NEW</button>
+        </div>
+        <!-- Search prompt -->
+        <div style="background:#0e0e0e;border-bottom:1px solid #353535;padding:5px 8px;display:flex;align-items:center">
+          <span style="color:#474747;font-size:10px;margin-right:6px">&gt;</span>
+          <span style="font-size:9px;color:#353535">filter exercises...</span>
+          <span style="color:#e2e2e2;animation:blink 1s step-end infinite">_</span>
+        </div>
+        <!-- Exercise list -->
+        <div style="border:1px solid #353535;flex:1;overflow:hidden">
+          <div style="background:#1f1f1f;border-bottom:1px solid #353535;padding:4px 8px;display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:7px;color:#474747;text-transform:uppercase">
+            <span>Exercise</span><span>Category</span><span>Actions</span>
+          </div>
+          <div class="ex-row"><div><div class="ex-name">Bench Press</div><div class="ex-meta">Chest · Barbell</div></div><span class="tag">Push</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+          <div class="ex-row"><div><div class="ex-name">Deadlift</div><div class="ex-meta">Back · Barbell</div></div><span class="tag">Pull</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+          <div class="ex-row"><div><div class="ex-name">Squat</div><div class="ex-meta">Legs · Barbell</div></div><span class="tag">Legs</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+          <div class="ex-row"><div><div class="ex-name">OHP</div><div class="ex-meta">Shoulders · Barbell</div></div><span class="tag">Push</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+          <div class="ex-row"><div><div class="ex-name">Pull-up</div><div class="ex-meta">Back · Bodyweight</div></div><span class="tag">Pull</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+          <div class="ex-row"><div><div class="ex-name">Hip Thrust</div><div class="ex-meta">Glutes · Barbell</div></div><span class="tag">Legs</span><div style="display:flex;gap:3px"><button class="btn-outline">Edit</button><button class="btn-outline" style="color:#693b3b;border-color:#693b3b">Del</button></div></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="nav-tab"><span class="nav-icon">⊞</span>~/dash</div>
+        <div class="nav-tab active"><span class="nav-icon">☰</span>~/tmpl</div>
+        <div class="nav-tab"><span class="nav-icon">⊕</span>~/actv</div>
+        <div class="nav-tab"><span class="nav-icon">◈</span>~/hist</div>
+        <div class="nav-tab"><span class="nav-icon">⟳</span>~/sync</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD EXERCISE -->
+  <div class="screen-wrap">
+    <div class="screen-label">3 / ~/tmpl → add-exercise</div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="topbar-title">⬛ root@fitness</span>
+        <span class="topbar-time">[ 22:45:01 ]</span>
+      </div>
+      <div class="page-body" style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:-0.02em">MKDIR EXERCISE</div>
+          <div style="font-size:8px;color:#474747;margin-top:2px">&gt; sudo create-exercise --type=strength</div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Exercise Name</div>
+          <div style="display:flex;align-items:center;background:#0e0e0e;border-bottom:1px solid #474747;padding:5px 8px">
+            <span style="color:#474747;margin-right:4px;font-size:10px">&gt;</span>
+            <input class="form-input" style="padding:0;border:none;background:transparent" placeholder="e.g. INCLINE_PRESS" />
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Category</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+            <div class="ex-chip" style="border-color:#e2e2e2;color:#e2e2e2">PUSH</div>
+            <div class="ex-chip">PULL</div>
+            <div class="ex-chip">LEGS</div>
+            <div class="ex-chip">CORE</div>
+            <div class="ex-chip">CARDIO</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Equipment</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+            <div class="ex-chip" style="border-color:#e2e2e2;color:#e2e2e2">BARBELL</div>
+            <div class="ex-chip">DUMBBELL</div>
+            <div class="ex-chip">MACHINE</div>
+            <div class="ex-chip">BODYWEIGHT</div>
+            <div class="ex-chip">CABLE</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Muscle Group</div>
+          <div style="display:flex;align-items:center;background:#0e0e0e;border-bottom:1px solid #474747;padding:5px 8px">
+            <span style="color:#474747;margin-right:4px;font-size:10px">&gt;</span>
+            <input class="form-input" style="padding:0;border:none;background:transparent" placeholder="e.g. CHEST, TRICEPS" />
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:auto;padding-top:8px">
+          <button class="btn-outline" style="flex:1;padding:10px">[ CANCEL ]</button>
+          <button class="btn-sm" style="flex:2;padding:10px">[ WRITE_TO_DB ]</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="nav-tab"><span class="nav-icon">⊞</span>~/dash</div>
+        <div class="nav-tab active"><span class="nav-icon">☰</span>~/tmpl</div>
+        <div class="nav-tab"><span class="nav-icon">⊕</span>~/actv</div>
+        <div class="nav-tab"><span class="nav-icon">◈</span>~/hist</div>
+        <div class="nav-tab"><span class="nav-icon">⟳</span>~/sync</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE WORKOUT -->
+  <div class="screen-wrap">
+    <div class="screen-label">4 / ~/tmpl → create-workout</div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="topbar-title">⬛ root@fitness</span>
+        <span class="topbar-time">[ 22:45:01 ]</span>
+      </div>
+      <div class="page-body" style="display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:-0.02em">COMPILE ROUTINE</div>
+          <div style="font-size:8px;color:#474747;margin-top:2px">&gt; vim ./templates/new_routine.json</div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Routine Name</div>
+          <div style="display:flex;align-items:center;background:#0e0e0e;border-bottom:1px solid #474747;padding:5px 8px">
+            <span style="color:#474747;margin-right:4px;font-size:10px">&gt;</span>
+            <span style="font-size:10px">PUSH_DAY_V2</span><span style="color:#e2e2e2">_</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div class="form-group" style="margin:0">
+            <div class="form-label">Difficulty</div>
+            <div style="background:#0e0e0e;border-bottom:1px solid #474747;padding:5px 8px;font-size:9px">[ HYPERTROPHY ]</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <div class="form-label">Category</div>
+            <div style="background:#0e0e0e;border-bottom:1px solid #474747;padding:5px 8px;font-size:9px">[ STRENGTH ]</div>
+          </div>
+        </div>
+        <!-- Exercise queue -->
+        <div style="font-size:8px;color:#474747;text-transform:uppercase;letter-spacing:0.15em;margin-top:4px">Exercise Queue</div>
+        <div style="border:1px solid #353535;flex:1;overflow:hidden">
+          <div style="background:#1f1f1f;padding:4px 8px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;font-size:7px;color:#474747;text-transform:uppercase;border-bottom:1px solid #353535">
+            <span>#</span><span>Exercise</span><span>Sets×Reps</span>
+          </div>
+          <div style="padding:5px 8px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;font-size:9px;border-bottom:1px solid #1f1f1f;align-items:center"><span style="color:#474747">01</span><span style="font-weight:700;text-transform:uppercase">Bench Press</span><span style="color:#919191;font-size:8px">4×8</span></div>
+          <div style="padding:5px 8px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;font-size:9px;border-bottom:1px solid #1f1f1f;align-items:center"><span style="color:#474747">02</span><span style="font-weight:700;text-transform:uppercase">OHP</span><span style="color:#919191;font-size:8px">3×10</span></div>
+          <div style="padding:5px 8px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;font-size:9px;border-bottom:1px solid #1f1f1f;align-items:center"><span style="color:#474747">03</span><span style="font-weight:700;text-transform:uppercase">Cable Fly</span><span style="color:#919191;font-size:8px">3×12</span></div>
+          <div style="padding:5px 8px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;font-size:9px;border-bottom:1px solid #353535;align-items:center;color:#353535">
+            <span>+</span><span style="font-size:8px">[ ADD_EXERCISE_TO_QUEUE ]</span><span></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding-top:4px">
+          <button class="btn-outline" style="flex:1;padding:8px;font-size:8px">[ DISCARD ]</button>
+          <button class="btn-sm" style="flex:2;padding:8px;font-size:8px">[ SAVE_ROUTINE ]</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="nav-tab"><span class="nav-icon">⊞</span>~/dash</div>
+        <div class="nav-tab active"><span class="nav-icon">☰</span>~/tmpl</div>
+        <div class="nav-tab"><span class="nav-icon">⊕</span>~/actv</div>
+        <div class="nav-tab"><span class="nav-icon">◈</span>~/hist</div>
+        <div class="nav-tab"><span class="nav-icon">⟳</span>~/sync</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px;border:1px solid #353535;background:#0e0e0e;font-size:10px;color:#474747">
+  <strong style="color:#919191">Note:</strong> Dashboard, Live Tracking, Templates list, and Sync are taken directly from the Stitch HTML files — no design decisions needed there. These 4 screens above are the only ones I designed independently, following kernel_core/DESIGN.md.
+</div>
+
+<script>
+// Simple click-to-select on screen cards
+document.querySelectorAll('.phone').forEach(el => {
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.phone').forEach(p => p.style.borderColor = '#474747');
+    el.style.borderColor = '#e2e2e2';
+  });
+});
+</script>
+</body>
+</html>

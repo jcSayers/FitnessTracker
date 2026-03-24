@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Space Grotesk', monospace;
+            background-color: #131313;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .mono-text {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#d4d4d4",
+                        "on-tertiary": "#1b1c1c",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#000000",
+                        "on-surface": "#e2e2e2",
+                        "secondary-container": "#464747",
+                        "inverse-on-surface": "#303030",
+                        "primary": "#ffffff",
+                        "tertiary-fixed": "#5e5e5e",
+                        "surface-tint": "#c6c6c7",
+                        "tertiary-container": "#919090",
+                        "on-primary": "#1a1c1c",
+                        "on-tertiary-fixed": "#ffffff",
+                        "primary-fixed": "#5d5f5f",
+                        "primary-fixed-dim": "#454747",
+                        "on-secondary-container": "#e3e2e2",
+                        "surface-variant": "#353535",
+                        "surface-bright": "#393939",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#c6c6c6",
+                        "surface-dim": "#131313",
+                        "on-tertiary-fixed-variant": "#e4e2e2",
+                        "outline": "#919191",
+                        "background": "#131313",
+                        "on-primary-container": "#000000",
+                        "tertiary": "#e4e2e2",
+                        "inverse-primary": "#5d5f5f",
+                        "inverse-surface": "#e2e2e2",
+                        "secondary": "#c7c6c6",
+                        "on-primary-fixed": "#ffffff",
+                        "surface": "#131313",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "secondary-fixed-dim": "#ababab",
+                        "surface-container-low": "#1b1b1b",
+                        "tertiary-fixed-dim": "#464747",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#353535",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f1f",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "outline-variant": "#474747",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#3a3c3c",
+                        "secondary-fixed": "#c7c6c6",
+                        "on-secondary": "#1a1c1c"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full border-b-2 border-zinc-800 bg-zinc-950 text-zinc-100 font-mono uppercase tracking-tight text-sm flex justify-between items-center px-4 h-16 z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-zinc-100">terminal</span>
+<span class="text-lg font-bold text-zinc-100 font-mono">root@fitness</span>
+</div>
+<div class="text-zinc-500">
+            [ 22:45:01 ]
+        </div>
+</header>
+<main class="pt-24 pb-32 px-4 max-w-4xl mx-auto">
+<!-- Directory Breadcrumb -->
+<section class="mb-12">
+<div class="flex items-center gap-2 mb-4">
+<span class="text-primary font-mono text-xl">&gt;</span>
+<h1 class="font-mono text-xl tracking-tighter text-on-surface">ls -la ./templates/routines/</h1>
+</div>
+<!-- Bento Grid Header / Status -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div class="bg-surface-container p-4 border border-outline-variant">
+<p class="text-on-surface-variant font-mono text-[10px] uppercase mb-1">Total Objects</p>
+<p class="text-primary font-mono text-2xl">08</p>
+</div>
+<div class="bg-surface-container p-4 border border-outline-variant">
+<p class="text-on-surface-variant font-mono text-[10px] uppercase mb-1">Disk Usage</p>
+<p class="text-primary font-mono text-2xl">128kb</p>
+</div>
+<div class="bg-surface-container p-4 border border-outline-variant">
+<p class="text-on-surface-variant font-mono text-[10px] uppercase mb-1">System Status</p>
+<p class="text-primary font-mono text-2xl text-primary flex items-center gap-2">
+<span class="w-2 h-2 bg-primary"></span> NOMINAL
+                    </p>
+</div>
+</div>
+<!-- Templates List (The Command Line View) -->
+<div class="space-y-0">
+<!-- Table Header -->
+<div class="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-on-surface-variant font-mono text-[10px] border-b border-outline-variant uppercase">
+<div class="col-span-4">Permissions</div>
+<div class="col-span-4">Routine Name</div>
+<div class="col-span-2">Stats</div>
+<div class="col-span-2 text-right">Execute</div>
+</div>
+<!-- Template Row 1 -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-6 border-b border-outline-variant hover:bg-surface-container transition-none group items-center">
+<div class="md:col-span-4 font-mono text-on-surface-variant text-xs flex items-center gap-3">
+<span class="text-primary">-rwxr-xr-x</span>
+<span class="hidden md:inline">1 root staff</span>
+</div>
+<div class="md:col-span-4">
+<h2 class="font-mono font-bold text-lg text-primary uppercase">PUSH_DAY_V1</h2>
+<div class="flex gap-4 mt-1">
+<span class="text-[10px] font-mono text-on-surface-variant">[ EX: 06 ]</span>
+<span class="text-[10px] font-mono text-on-surface-variant">[ TM: 45M ]</span>
+</div>
+</div>
+<div class="md:col-span-2 font-mono text-xs text-secondary-fixed">
+<div class="bg-secondary-container px-2 py-0.5 inline-block">[ LVL: HYPERTROPHY ]</div>
+</div>
+<div class="md:col-span-2 flex justify-end gap-2">
+<button class="bg-primary text-on-primary font-mono text-xs px-3 py-2 hover:bg-on-surface transition-none">
+                            [ START ]
+                        </button>
+<button class="border border-outline text-on-surface font-mono text-xs px-3 py-2 hover:bg-surface-variant transition-none">
+                            [ EDIT ]
+                        </button>
+</div>
+</div>
+<!-- Template Row 2 -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-6 border-b border-outline-variant hover:bg-surface-container transition-none group items-center">
+<div class="md:col-span-4 font-mono text-on-surface-variant text-xs flex items-center gap-3">
+<span class="text-primary">-rwxr-xr-x</span>
+<span class="hidden md:inline">1 root staff</span>
+</div>
+<div class="md:col-span-4">
+<h2 class="font-mono font-bold text-lg text-primary uppercase">PULL_EXPLOSIVE</h2>
+<div class="flex gap-4 mt-1">
+<span class="text-[10px] font-mono text-on-surface-variant">[ EX: 08 ]</span>
+<span class="text-[10px] font-mono text-on-surface-variant">[ TM: 60M ]</span>
+</div>
+</div>
+<div class="md:col-span-2 font-mono text-xs text-secondary-fixed">
+<div class="bg-secondary-container px-2 py-0.5 inline-block">[ LVL: ELITE ]</div>
+</div>
+<div class="md:col-span-2 flex justify-end gap-2">
+<button class="bg-primary text-on-primary font-mono text-xs px-3 py-2 hover:bg-on-surface transition-none">
+                            [ START ]
+                        </button>
+<button class="border border-outline text-on-surface font-mono text-xs px-3 py-2 hover:bg-surface-variant transition-none">
+                            [ EDIT ]
+                        </button>
+</div>
+</div>
+<!-- Template Row 3 -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-6 border-b border-outline-variant hover:bg-surface-container transition-none group items-center">
+<div class="md:col-span-4 font-mono text-on-surface-variant text-xs flex items-center gap-3">
+<span class="text-primary">-rwxr-xr-x</span>
+<span class="hidden md:inline">1 root staff</span>
+</div>
+<div class="md:col-span-4">
+<h2 class="font-mono font-bold text-lg text-primary uppercase">LEG_DAY_CRY_V2</h2>
+<div class="flex gap-4 mt-1">
+<span class="text-[10px] font-mono text-on-surface-variant">[ EX: 05 ]</span>
+<span class="text-[10px] font-mono text-on-surface-variant">[ TM: 75M ]</span>
+</div>
+</div>
+<div class="md:col-span-2 font-mono text-xs text-secondary-fixed">
+<div class="bg-secondary-container px-2 py-0.5 inline-block">[ LVL: BRUTAL ]</div>
+</div>
+<div class="md:col-span-2 flex justify-end gap-2">
+<button class="bg-primary text-on-primary font-mono text-xs px-3 py-2 hover:bg-on-surface transition-none">
+                            [ START ]
+                        </button>
+<button class="border border-outline text-on-surface font-mono text-xs px-3 py-2 hover:bg-surface-variant transition-none">
+                            [ EDIT ]
+                        </button>
+</div>
+</div>
+<!-- Template Row 4 (Legacy) -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-6 border-b border-outline-variant hover:bg-surface-container transition-none group items-center opacity-60">
+<div class="md:col-span-4 font-mono text-on-surface-variant text-xs flex items-center gap-3">
+<span class="text-on-surface-variant">-rw-r--r--</span>
+<span class="hidden md:inline">1 root staff</span>
+</div>
+<div class="md:col-span-4">
+<h2 class="font-mono font-bold text-lg text-on-surface-variant uppercase">DEPRECATED_FULL_BODY</h2>
+<div class="flex gap-4 mt-1">
+<span class="text-[10px] font-mono text-on-surface-variant">[ EX: 12 ]</span>
+<span class="text-[10px] font-mono text-on-surface-variant">[ TM: 90M ]</span>
+</div>
+</div>
+<div class="md:col-span-2 font-mono text-xs text-secondary-fixed">
+<div class="bg-surface-container-highest px-2 py-0.5 inline-block">[ READ_ONLY ]</div>
+</div>
+<div class="md:col-span-2 flex justify-end gap-2">
+<button class="bg-surface-variant text-on-surface-variant font-mono text-xs px-3 py-2 cursor-not-allowed">
+                            [ LOCKED ]
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- ASCII Progress / System Load Section -->
+<section class="mt-16 bg-surface-container-lowest p-6 border border-outline-variant">
+<h3 class="font-mono text-xs text-on-surface-variant uppercase mb-6 flex justify-between">
+<span>Current Athlete Load</span>
+<span>[ CPU: 14% | MEM: 82% ]</span>
+</h3>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between font-mono text-[10px] mb-2 uppercase">
+<span>Recovery Progress</span>
+<span>85%</span>
+</div>
+<div class="font-mono text-primary text-sm tracking-widest overflow-hidden whitespace-nowrap">
+                        [|||||||||||||||||||||||||||||||..........]
+                    </div>
+</div>
+<div>
+<div class="flex justify-between font-mono text-[10px] mb-2 uppercase">
+<span>Weekly Target Volume</span>
+<span>42%</span>
+</div>
+<div class="font-mono text-primary text-sm tracking-widest overflow-hidden whitespace-nowrap">
+                        [|||||||||||||||..........................]
+                    </div>
+</div>
+</div>
+</section>
+<!-- Command Prompt Section -->
+<section class="mt-12 flex flex-col gap-4">
+<div class="bg-surface-container-high p-4 flex items-center gap-4">
+<span class="font-mono text-primary text-lg">&gt;</span>
+<input class="bg-transparent border-none outline-none focus:ring-0 font-mono text-primary w-full placeholder:text-zinc-700" placeholder="Enter command or search templates..." type="text"/>
+</div>
+<div class="flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-1 font-mono text-[10px] uppercase">help</span>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-1 font-mono text-[10px] uppercase">mkdir routine</span>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-1 font-mono text-[10px] uppercase">sudo su athlete</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 bg-zinc-950 border-t border-zinc-800">
+<div class="flex flex-col items-center justify-center text-zinc-500 p-2 hover:bg-zinc-900 transition-none">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">~/dash</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-zinc-100 text-zinc-950 p-2 scale-100 transition-none">
+<span class="material-symbols-outlined mb-1">description</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">~/tmpl</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-500 p-2 hover:bg-zinc-900 transition-none">
+<span class="material-symbols-outlined mb-1">fitness_center</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">~/actv</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-500 p-2 hover:bg-zinc-900 transition-none">
+<span class="material-symbols-outlined mb-1">sync</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">~/sync</span>
+</div>
+</nav>
+</body></html>
