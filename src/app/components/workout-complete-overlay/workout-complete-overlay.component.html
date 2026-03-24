@@ -1,0 +1,78 @@
+@if (animState() !== 'idle') {
+  <div
+    class="fixed inset-0 z-50 bg-background flex flex-col justify-center font-mono cursor-pointer"
+    (click)="onOverlayClick()"
+    style="animation: overlayFadeIn 200ms ease forwards;">
+
+    <!-- Scanlines -->
+    <div class="absolute inset-0 pointer-events-none"
+         style="background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);">
+    </div>
+
+    <div class="relative z-10 px-6 py-10 max-w-sm w-full mx-auto">
+
+      <!-- Boot log line -->
+      <div class="text-outline text-[10px] mb-6 min-h-[16px]">
+        {{ logText() }}<span
+          class="inline-block w-[6px] h-[10px] bg-on-surface align-middle ml-[1px]"
+          [class.opacity-0]="logText().length < LOG_FULL.length"></span>
+      </div>
+
+      <!-- DONE box -->
+      @if (animState() === 'showing-box' || animState() === 'showing-cursor' || animState() === 'counting-down') {
+        <div class="border border-primary p-5 text-center mb-6"
+             style="animation: boxReveal 200ms ease forwards;">
+
+          <div class="text-[22px] font-black tracking-[6px] text-primary mb-4">DONE</div>
+
+          <div class="flex justify-center gap-8 text-[10px]">
+            <div class="text-center">
+              <div class="text-outline text-[9px] mb-1 tracking-widest">TIME</div>
+              <div class="text-[16px] font-bold text-primary">{{ formattedTime() }}</div>
+            </div>
+            <div class="text-center">
+              <div class="text-outline text-[9px] mb-1 tracking-widest">SETS</div>
+              <div class="text-[16px] font-bold text-primary">{{ sets() }}</div>
+            </div>
+          </div>
+
+        </div>
+      }
+
+      <!-- Blinking cursor -->
+      @if (animState() === 'showing-cursor' || animState() === 'counting-down') {
+        <div class="text-outline text-[10px]">
+          $ exit 0&nbsp;<span
+            class="inline-block w-[7px] h-[11px] bg-on-surface-variant align-middle"
+            [class.opacity-0]="!cursorVisible()"></span>
+        </div>
+      }
+
+    </div>
+
+    <!-- Countdown drain bar -->
+    @if (animState() === 'counting-down') {
+      <div class="absolute bottom-0 left-0 right-0">
+        <div class="bg-outline-variant h-[2px]">
+          <div class="bg-primary h-[2px] transition-none"
+               [style.width.%]="countdownWidth()"></div>
+        </div>
+        <div class="text-center text-outline-variant text-[9px] tracking-[3px] py-1">
+          TAP TO DISMISS
+        </div>
+      </div>
+    }
+
+  </div>
+}
+
+<style>
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes boxReveal {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+</style>
