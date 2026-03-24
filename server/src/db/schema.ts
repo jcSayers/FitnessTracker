@@ -165,12 +165,45 @@ export const syncStatus = pgTable(
   (table) => [index("idx_sync_status_updated_at").on(table.updated_at)]
 );
 
+// Garmin Connections table
+export const garminConnections = pgTable(
+  "garmin_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    garmin_user_id: varchar("garmin_user_id", { length: 255 }).notNull(),
+    access_token: text("access_token").notNull(),
+    access_token_secret: text("access_token_secret").notNull(),
+    connected_at: timestamp("connected_at", { withTimezone: true }).defaultNow(),
+    last_activity_at: timestamp("last_activity_at", { withTimezone: true }),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("idx_garmin_connections_user_id").on(table.user_id),
+    index("idx_garmin_connections_garmin_user_id").on(table.garmin_user_id),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   templates: many(workoutTemplates),
   instances: many(workoutInstances),
   logs: many(exerciseLogs),
   syncStatus: one(syncStatus),
+  garminConnection: one(garminConnections),
+}));
+
+export const garminConnectionsRelations = relations(garminConnections, ({ one }) => ({
+  user: one(users, {
+    fields: [garminConnections.user_id],
+    references: [users.id],
+  }),
 }));
 
 export const workoutTemplatesRelations = relations(

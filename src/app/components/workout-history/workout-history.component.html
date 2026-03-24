@@ -19,6 +19,113 @@
     </div>
   </div>
 
+  <!-- CHARTS -->
+  <div class="space-y-3 mb-6">
+
+    <!-- Volume trend line chart -->
+    <div class="border border-outline-variant">
+      <div class="flex justify-between items-center bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+        <span>VOLUME.LOG</span>
+        <span>{{ volumeChartPoints().length > 0 ? 'LAST ' + volumeChartPoints().length + ' SESSIONS' : 'NO DATA' }}</span>
+      </div>
+      @if (volumeChartPoints().length > 1) {
+        <div class="bg-surface-container p-3">
+          <svg width="100%" viewBox="0 0 320 85">
+            <line x1="5" y1="60" x2="315" y2="60" stroke="#474747" stroke-width="0.5"/>
+            <path [attr.d]="volumeAreaPath()" fill="#474747" opacity="0.4"/>
+            <path [attr.d]="volumeLinePath()" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+            @for (pt of volumeChartPoints(); track pt.x; let isFirst = $first, isLast = $last) {
+              @if (isFirst || isLast) {
+                <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" fill="#ffffff"/>
+                <text [attr.x]="pt.x" y="75" fill="#919191" font-size="7" [attr.text-anchor]="isFirst ? 'start' : 'end'" font-family="monospace">{{ pt.label }}</text>
+                <text [attr.x]="pt.x" [attr.y]="pt.y - 6" fill="#c6c6c6" font-size="7" [attr.text-anchor]="isFirst ? 'start' : 'end'" font-family="monospace">{{ pt.value }}kg</text>
+              } @else {
+                <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="1.5" fill="#919191"/>
+              }
+            }
+          </svg>
+        </div>
+      } @else {
+        <div class="px-3 py-4 text-xs text-outline-variant">&gt;&gt;&gt; INSUFFICIENT_DATA</div>
+      }
+    </div>
+
+    <!-- Weekly frequency bar chart -->
+    <div class="border border-outline-variant">
+      <div class="flex justify-between items-center bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+        <span>FREQ.LOG</span>
+        <span>SESSIONS/WEEK — LAST 8 WKS</span>
+      </div>
+      <div class="bg-surface-container p-3">
+        <svg width="100%" viewBox="0 0 320 85">
+          <line x1="5" y1="60" x2="315" y2="60" stroke="#474747" stroke-width="0.5"/>
+          @for (bar of weeklyBarsData(); track bar.x) {
+            @if (bar.count > 0) {
+              <rect [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.w" [attr.height]="bar.h"
+                    [attr.fill]="bar.isCurrent ? '#ffffff' : '#919191'"/>
+              <text [attr.x]="bar.x + bar.w / 2" y="73" fill="#c6c6c6" font-size="6.5" text-anchor="middle" font-family="monospace">{{ bar.count }}</text>
+            } @else {
+              <rect [attr.x]="bar.x" y="59.5" [attr.width]="bar.w" height="1" fill="#474747"/>
+            }
+            <text [attr.x]="bar.x + bar.w / 2" y="83" [attr.fill]="bar.isCurrent ? '#c6c6c6' : '#474747'" font-size="5.5" text-anchor="middle" font-family="monospace">{{ bar.label }}</text>
+          }
+        </svg>
+      </div>
+    </div>
+
+    <!-- Exercise weight progression -->
+    <div class="border border-outline-variant">
+      <div class="flex justify-between items-center bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">
+        <span>LIFT.LOG</span>
+        <span>MAX WEIGHT / SESSION</span>
+      </div>
+      @if (exerciseProgressData().length > 0) {
+        <div class="flex flex-wrap gap-1 px-3 pt-3">
+          @for (ex of exerciseProgressData().slice(0, 5); track ex.name; let i = $index) {
+            <button
+              (click)="selectExercise(i)"
+              class="text-[9px] uppercase tracking-widest px-2 py-1 border"
+              [class.border-primary]="selectedExerciseIdx() === i"
+              [class.text-primary]="selectedExerciseIdx() === i"
+              [class.border-outline-variant]="selectedExerciseIdx() !== i"
+              [class.text-outline]="selectedExerciseIdx() !== i">
+              {{ ex.name }}
+            </button>
+          }
+        </div>
+        @if (exerciseChartPoints().length > 1) {
+          <div class="bg-surface-container px-3 pb-3 mt-2">
+            <svg width="100%" viewBox="0 0 320 85">
+              <line x1="5" y1="60" x2="315" y2="60" stroke="#474747" stroke-width="0.5"/>
+              <path [attr.d]="exerciseAreaPath()" fill="#474747" opacity="0.4"/>
+              <path [attr.d]="exerciseLinePath()" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+              @if (exercisePrPoint(); as pr) {
+                <circle [attr.cx]="pr.x" [attr.cy]="pr.y" r="5" fill="none" stroke="#ffffff" stroke-width="1" stroke-dasharray="2,2"/>
+                <text [attr.x]="pr.x" [attr.y]="pr.y - 8" fill="#ffffff" font-size="6.5" text-anchor="middle" font-family="monospace">PR</text>
+              }
+              @for (pt of exerciseChartPoints(); track pt.x; let isFirst = $first, isLast = $last) {
+                @if (isFirst || isLast) {
+                  <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="2.5" fill="#ffffff"/>
+                  <text [attr.x]="pt.x" y="75" fill="#919191" font-size="7" [attr.text-anchor]="isFirst ? 'start' : 'end'" font-family="monospace">{{ pt.label }}</text>
+                  <text [attr.x]="pt.x" [attr.y]="pt.y - 6" fill="#c6c6c6" font-size="7" [attr.text-anchor]="isFirst ? 'start' : 'end'" font-family="monospace">{{ pt.value }}kg</text>
+                } @else {
+                  <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="1.5" fill="#919191"/>
+                }
+              }
+            </svg>
+          </div>
+        } @else if (exerciseChartPoints().length === 1) {
+          <div class="px-3 py-3 text-xs text-on-surface-variant">&gt;&gt;&gt; SINGLE_SESSION: {{ exerciseChartPoints()[0].value }}kg</div>
+        } @else {
+          <div class="px-3 py-4 text-xs text-outline-variant">&gt;&gt;&gt; NO_WEIGHT_DATA</div>
+        }
+      } @else {
+        <div class="px-3 py-4 text-xs text-outline-variant">&gt;&gt;&gt; NO_LIFT_DATA</div>
+      }
+    </div>
+
+  </div>
+
   <!-- SESSION TABLE -->
   <div class="border border-outline-variant">
     <div class="grid grid-cols-4 bg-surface-container-high px-3 py-2 text-[9px] uppercase tracking-widest text-outline">

@@ -1,0 +1,111 @@
+<div class="min-h-screen bg-background flex items-center justify-center p-4 font-mono">
+  <div class="w-full max-w-sm">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary text-2xl">terminal</span>
+        <span class="text-primary font-bold text-lg uppercase tracking-widest">root&#64;fitness</span>
+      </div>
+      <h1 class="text-4xl font-bold uppercase tracking-tighter text-primary mb-1">
+        @if (mode() === 'login') { AUTH_LOGIN }
+        @else if (mode() === 'register') { NEW_USER }
+        @else { RESET_PWD }
+      </h1>
+      <p class="text-[9px] uppercase tracking-widest text-outline">
+        @if (mode() === 'login') { > sudo login --user=athlete }
+        @else if (mode() === 'register') { > sudo adduser --type=athlete }
+        @else { > passwd --reset-token }
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="border border-outline-variant p-4 bg-surface-container-lowest">
+
+      <!-- Email -->
+      <div class="mb-4">
+        <div class="text-[9px] uppercase tracking-widest text-outline mb-2">EMAIL_ADDRESS</div>
+        <div class="flex items-center gap-2 border-b border-secondary pb-1">
+          <span class="text-outline text-xs">&gt;</span>
+          <input
+            type="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            placeholder="user@domain.com"
+            autocomplete="email"
+            class="flex-1 bg-transparent text-on-surface text-xs outline-none font-mono placeholder:text-outline-variant"
+          />
+        </div>
+      </div>
+
+      <!-- Password (hidden for reset mode) -->
+      @if (mode() !== 'reset') {
+        <div class="mb-6">
+          <div class="text-[9px] uppercase tracking-widest text-outline mb-2">PASSWORD</div>
+          <div class="flex items-center gap-2 border-b border-secondary pb-1">
+            <span class="text-outline text-xs">&gt;</span>
+            <input
+              type="password"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              class="flex-1 bg-transparent text-on-surface text-xs outline-none font-mono placeholder:text-outline-variant"
+            />
+          </div>
+        </div>
+      } @else {
+        <div class="mb-6"></div>
+      }
+
+      <!-- Error -->
+      @if (error()) {
+        <div class="mb-4 text-[9px] uppercase tracking-widest text-error border border-error px-3 py-2">
+          &gt;&gt;&gt; ERR: {{ error() }}
+        </div>
+      }
+
+      <!-- Success -->
+      @if (successMessage()) {
+        <div class="mb-4 text-[9px] uppercase tracking-widest text-primary border border-primary px-3 py-2">
+          &gt;&gt;&gt; {{ successMessage() }}
+        </div>
+      }
+
+      <!-- Submit -->
+      <button
+        (click)="onSubmit()"
+        [disabled]="loading()"
+        class="w-full bg-primary text-on-primary text-[9px] uppercase tracking-widest py-3 font-bold hover:bg-on-surface hover:text-surface disabled:opacity-50 mb-3">
+        @if (loading()) { [ PROCESSING... ] }
+        @else if (mode() === 'login') { [ AUTHENTICATE ] }
+        @else if (mode() === 'register') { [ CREATE_ACCOUNT ] }
+        @else { [ SEND_RESET_LINK ] }
+      </button>
+    </div>
+
+    <!-- Mode switcher -->
+    <div class="mt-4 flex flex-col gap-2 text-[9px] uppercase tracking-widest">
+      @if (mode() === 'login') {
+        <button (click)="setMode('register')" class="text-outline hover:text-primary text-left">
+          &gt; No account? Register →
+        </button>
+        <button (click)="setMode('reset')" class="text-outline hover:text-primary text-left">
+          &gt; Forgot password? →
+        </button>
+      } @else {
+        <button (click)="setMode('login')" class="text-outline hover:text-primary text-left">
+          &gt; Back to login →
+        </button>
+      }
+    </div>
+
+    <!-- Boot text -->
+    <div class="mt-8">
+      <pre class="text-[8px] text-outline-variant leading-snug">FITNESS_TRACKER v2.0.0
+TERMINAL_AUTH_MODULE
+ENCRYPTED_CHANNEL: TLS_1.3</pre>
+    </div>
+
+  </div>
+</div>

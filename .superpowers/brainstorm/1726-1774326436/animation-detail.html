@@ -1,0 +1,97 @@
+
+<h2>Animation Detail — Terminal Boot Log</h2>
+<p class="subtitle">Full sequence mockup. Approve or suggest tweaks before we write the spec.</p>
+
+<div class="mockup" style="max-width:400px;margin:0 auto;">
+  <div class="mockup-header">Fullscreen overlay — active-workout view</div>
+  <div class="mockup-body" style="background:#131313;font-family:'Courier New',monospace;font-size:11px;color:#e2e2e2;padding:0;position:relative;min-height:480px;">
+
+    <!-- Scanline overlay (subtle) -->
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:10;"></div>
+
+    <div style="padding:28px 20px;position:relative;z-index:11;">
+
+      <!-- Header -->
+      <div style="color:#919191;font-size:9px;letter-spacing:3px;margin-bottom:20px;border-bottom:1px solid #474747;padding-bottom:8px;">
+        SYSTEM ▶ SESSION_HANDLER v1.0
+      </div>
+
+      <!-- Boot log lines (appear one by one) -->
+      <div style="line-height:2;margin-bottom:20px;">
+        <div><span style="color:#919191">[0.001]</span> Stopping workout timer...<span style="color:#fff;margin-left:8px;">OK</span></div>
+        <div><span style="color:#919191">[0.003]</span> Calculating set totals...<span style="color:#fff;margin-left:8px;">OK</span></div>
+        <div><span style="color:#919191">[0.007]</span> Computing volume...<span style="color:#fff;margin-left:8px;">OK</span></div>
+        <div><span style="color:#919191">[0.009]</span> Writing to history...<span style="color:#fff;margin-left:8px;">OK</span></div>
+        <div><span style="color:#919191">[0.012]</span> Syncing data...<span style="color:#fff;margin-left:8px;">OK</span></div>
+      </div>
+
+      <!-- ASCII progress bar -->
+      <div style="font-size:10px;color:#919191;margin-bottom:4px;">COMMIT PROGRESS</div>
+      <div style="font-size:12px;letter-spacing:1px;color:#fff;margin-bottom:20px;">[████████████████████] 100%</div>
+
+      <!-- Mission accomplished box -->
+      <div style="border:1px solid #fff;padding:16px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:9px;color:#919191;letter-spacing:4px;margin-bottom:6px;">STATUS: 0x00 SUCCESS</div>
+        <div style="font-size:20px;font-weight:900;letter-spacing:4px;color:#fff;">MISSION</div>
+        <div style="font-size:20px;font-weight:900;letter-spacing:4px;color:#fff;">ACCOMPLISHED</div>
+        <div style="margin-top:14px;display:flex;justify-content:center;gap:24px;font-size:10px;">
+          <div style="text-align:center"><div style="color:#919191;font-size:9px">SETS</div><div style="font-size:18px;font-weight:bold">12</div></div>
+          <div style="text-align:center"><div style="color:#919191;font-size:9px">DURATION</div><div style="font-size:18px;font-weight:bold">47:22</div></div>
+          <div style="text-align:center"><div style="color:#919191;font-size:9px">VOLUME</div><div style="font-size:18px;font-weight:bold">2840kg</div></div>
+        </div>
+      </div>
+
+      <!-- Blinking cursor line -->
+      <div style="color:#919191;font-size:10px;margin-bottom:16px;">$ exit 0 <span style="background:#e2e2e2;color:#131313;padding:0 2px;">_</span></div>
+
+      <!-- Auto-dismiss progress bar at bottom -->
+      <div style="position:absolute;bottom:0;left:0;right:0;z-index:12;">
+        <div style="background:#474747;height:2px;">
+          <div style="background:#fff;height:2px;width:35%;transition:width linear;"></div>
+        </div>
+        <div style="text-align:center;color:#474747;font-size:9px;padding:4px;letter-spacing:2px;">TAP ANYWHERE TO DISMISS</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>Sequence & Timing</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">0ms</td>
+      <td style="padding:6px 8px;">Overlay fades in (bg + border)</td>
+    </tr>
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">100–600ms</td>
+      <td style="padding:6px 8px;">Boot log lines print one by one (staggered ~100ms each)</td>
+    </tr>
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">700ms</td>
+      <td style="padding:6px 8px;">ASCII progress bar fills left→right over 400ms</td>
+    </tr>
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">1100ms</td>
+      <td style="padding:6px 8px;">MISSION ACCOMPLISHED box appears (scale + fade)</td>
+    </tr>
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">1300ms</td>
+      <td style="padding:6px 8px;">Stats revealed + cursor blink begins</td>
+    </tr>
+    <tr style="border-bottom:1px solid #474747;">
+      <td style="padding:6px 0;color:#919191;">1300–4300ms</td>
+      <td style="padding:6px 8px;">Bottom progress bar drains (3 sec countdown)</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 0;color:#919191;">4300ms</td>
+      <td style="padding:6px 8px;">Auto-dismiss → navigate to /history</td>
+    </tr>
+  </table>
+  <p style="margin-top:12px;font-size:12px;color:#919191;">Click anywhere during the sequence skips to /history immediately.</p>
+</div>
+
+<div class="section">
+  <h3>Implementation approach</h3>
+  <p style="font-size:12px;">Standalone Angular component (<code>WorkoutCompleteOverlayComponent</code>) with a signal-driven animation state machine. Fixed fullscreen overlay rendered inside <code>active-workout</code> template. <code>finishWorkout()</code> triggers it instead of navigating directly. No external animation libraries — pure CSS transitions + Angular <code>@if</code> / <code>setTimeout</code> sequencing.</p>
+</div>

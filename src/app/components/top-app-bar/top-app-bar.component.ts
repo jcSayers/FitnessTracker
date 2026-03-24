@@ -1,5 +1,6 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-top-app-bar',
@@ -9,6 +10,9 @@ import { CommonModule } from '@angular/common';
 })
 export class TopAppBarComponent implements OnDestroy {
   clock = signal('');
+  private auth = inject(AuthService);
+  userEmail = this.auth.userEmail;
+  isAuthenticated = this.auth.isAuthenticated;
   private interval: ReturnType<typeof setInterval>;
 
   constructor() {
@@ -17,6 +21,8 @@ export class TopAppBarComponent implements OnDestroy {
   }
 
   ngOnDestroy() { clearInterval(this.interval); }
+
+  signOut() { this.auth.signOut(); }
 
   private tick() {
     const n = new Date();

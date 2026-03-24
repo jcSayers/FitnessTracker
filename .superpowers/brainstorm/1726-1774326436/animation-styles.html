@@ -1,0 +1,88 @@
+
+<h2>Workout Complete Animation — Pick a direction</h2>
+<p class="subtitle">All three stay within the terminal/monochrome system. Which vibe fits best?</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#131313;padding:20px;font-family:'Courier New',monospace;font-size:11px;color:#e2e2e2;min-height:200px;overflow:hidden;">
+      <div style="color:#919191;margin-bottom:8px;">[ PROCESS: 0x4F3A ]</div>
+      <div style="margin-bottom:4px;">▶ Saving session data.........<span style="color:#fff">OK</span></div>
+      <div style="margin-bottom:4px;">▶ Computing totals..............<span style="color:#fff">OK</span></div>
+      <div style="margin-bottom:4px;">▶ Writing to history............<span style="color:#fff">OK</span></div>
+      <div style="border:1px solid #474747;padding:12px;margin-top:16px;text-align:center;">
+        <div style="font-size:22px;font-weight:bold;letter-spacing:4px;color:#fff;">MISSION_ACCOMPLISHED</div>
+        <div style="color:#919191;font-size:10px;margin-top:6px;">SESSION COMMITTED ✓</div>
+        <div style="margin-top:10px;color:#919191;">[#########.] 90%</div>
+      </div>
+      <div style="color:#919191;margin-top:10px;font-size:10px;">$ exit 0 ▌</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Terminal Boot Log</h3>
+      <p>Lines print one by one like a system process completing. ASCII progress bar fills. Ends with a blinking cursor. Very Linux <code>apt install</code> energy.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#131313;padding:20px;font-family:'Courier New',monospace;font-size:11px;color:#e2e2e2;min-height:200px;overflow:hidden;position:relative;">
+      <!-- scanlines effect -->
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);pointer-events:none;z-index:1;"></div>
+      <div style="text-align:center;padding-top:10px;position:relative;z-index:2;">
+        <div style="font-size:10px;letter-spacing:6px;color:#919191;margin-bottom:8px;">- - - STAGE CLEAR - - -</div>
+        <div style="font-size:32px;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 0 20px rgba(255,255,255,0.4)">COMPLETE</div>
+        <div style="margin:16px 0;color:#919191;">· · · · · · · · · · · · · · ·</div>
+        <div style="display:flex;justify-content:center;gap:24px;font-size:10px;">
+          <div><div style="color:#919191">SETS</div><div style="font-size:20px;font-weight:bold">12</div></div>
+          <div><div style="color:#919191">TIME</div><div style="font-size:20px;font-weight:bold">47:22</div></div>
+          <div><div style="color:#919191">VOL kg</div><div style="font-size:20px;font-weight:bold">2840</div></div>
+        </div>
+        <div style="margin-top:16px;font-size:10px;letter-spacing:3px;color:#919191;">▶ PRESS TO CONTINUE ◀</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Retro Game Score Screen</h3>
+      <p>Stats roll up like a level-complete screen (think old RPGs). Scanlines overlay. Big centered "COMPLETE" text with a glow. Numbers count up from 0.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#131313;padding:20px;font-family:'Courier New',monospace;font-size:11px;color:#e2e2e2;min-height:200px;overflow:hidden;position:relative;">
+      <!-- matrix rain hint in background -->
+      <div style="position:absolute;inset:0;display:flex;gap:14px;overflow:hidden;opacity:0.12;">
+        <div style="color:#fff;font-size:10px;line-height:1.4">0<br>1<br>0<br>1<br>1<br>0<br>1<br>0<br>1<br>0<br>1<br>0<br>0<br>1</div>
+        <div style="color:#fff;font-size:10px;line-height:1.4;margin-top:8px">1<br>0<br>0<br>1<br>0<br>1<br>0<br>1<br>0<br>1<br>1<br>0<br>1<br>0</div>
+        <div style="color:#fff;font-size:10px;line-height:1.4">0<br>1<br>1<br>0<br>1<br>0<br>1<br>0<br>1<br>0<br>0<br>1<br>0<br>1</div>
+        <div style="color:#fff;font-size:10px;line-height:1.4;margin-top:16px">1<br>1<br>0<br>1<br>0<br>1<br>1<br>0<br>1<br>0<br>1<br>0<br>1<br>0</div>
+        <div style="color:#fff;font-size:10px;line-height:1.4">0<br>1<br>0<br>0<br>1<br>0<br>1<br>0<br>1<br>1<br>0<br>1<br>0<br>1</div>
+      </div>
+      <div style="position:relative;z-index:2;">
+        <div style="border-left:2px solid #fff;padding-left:12px;margin-bottom:10px;">
+          <div style="color:#919191;font-size:9px;letter-spacing:3px">STATUS</div>
+          <div style="font-size:10px">DECRYPTING GAINS...</div>
+        </div>
+        <div style="text-align:center;margin-top:12px;">
+          <div style="display:inline-block;border:1px solid #fff;padding:12px 24px;">
+            <div style="font-size:14px;font-weight:bold;letter-spacing:6px">SESSION</div>
+            <div style="font-size:26px;font-weight:900;letter-spacing:3px">TERMINATED</div>
+            <div style="font-size:9px;color:#919191;margin-top:4px">WITH STATUS: SUCCESS</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;text-align:center;font-size:9px;color:#919191;">
+          &gt; ALL OBJECTIVES COMPLETED_
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Hacker Reveal</h3>
+      <p>Binary/noise cascade in background, text "decrypts" character by character (typewriter style). Framed in a border box. Very <code>/bin/terminate --success</code> energy.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <p class="subtitle">All options: fullscreen overlay, auto-dismiss after ~3s or on tap, monochrome palette only. Click one to select, then tell me your thoughts.</p>
+</div>

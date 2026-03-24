@@ -1,7 +1,18 @@
 <header class="fixed top-0 left-0 right-0 z-50 h-16 bg-surface-container-lowest border-b-2 border-outline-variant flex items-center justify-between px-4">
   <div class="flex items-center gap-2">
     <span class="material-symbols-outlined text-on-surface text-xl select-none">terminal</span>
-    <span class="font-mono font-bold uppercase tracking-widest text-on-surface text-sm select-none">root@fitness</span>
+    <span class="font-mono font-bold uppercase tracking-widest text-on-surface text-sm select-none">root&#64;fitness</span>
   </div>
-  <span class="font-mono text-outline text-xs tracking-widest select-none">{{ clock() }}</span>
+  <div class="flex items-center gap-2">
+    <span class="font-mono text-outline text-xs tracking-widest select-none">{{ clock() }}</span>
+    @if (isAuthenticated()) {
+      <span class="text-[9px] uppercase tracking-widest text-outline hidden sm:block truncate max-w-32">
+        {{ userEmail() }}
+      </span>
+      <button (click)="signOut()"
+        class="text-[9px] uppercase tracking-widest text-outline hover:text-primary border border-outline-variant px-2 py-1 ml-2">
+        EXIT
+      </button>
+    }
+  </div>
 </header>

@@ -75,12 +75,12 @@
               @if (row.active) {
                 <div class="flex items-center gap-1">
                   <input type="number" [ngModel]="currentSet().weight"
-                    (ngModelChange)="currentSet.set({...currentSet(), weight: $event})"
+                    (ngModelChange)="updateWeight($event)"
                     placeholder="kg"
                     class="w-12 bg-surface-container-lowest border-b border-secondary text-primary text-xs text-center outline-none font-mono"/>
                   <span class="text-outline-variant">×</span>
                   <input type="number" [ngModel]="currentSet().reps"
-                    (ngModelChange)="currentSet.set({...currentSet(), reps: $event})"
+                    (ngModelChange)="updateReps($event)"
                     placeholder="reps"
                     class="w-12 bg-surface-container-lowest border-b border-secondary text-primary text-xs text-center outline-none font-mono"/>
                 </div>
@@ -148,5 +148,24 @@
       </div>
     }
 
+  }
+
+  <!-- Workout complete overlay -->
+  <app-workout-complete-overlay
+    [visible]="showCompleteOverlay()"
+    [elapsedSeconds]="overlayElapsedSeconds()"
+    [sets]="overlaySets()"
+    (dismissed)="onOverlayDismissed()">
+  </app-workout-complete-overlay>
+
+  <!-- DEV: test button — remove before merging to main -->
+  @if (isDev) {
+    <div class="fixed bottom-16 right-4 z-40">
+      <button
+        (click)="overlayElapsedSeconds.set(2842); overlaySets.set(12); showCompleteOverlay.set(true)"
+        class="bg-surface-container border border-outline-variant text-on-surface-variant text-[9px] uppercase tracking-widest px-3 py-2 hover:border-primary hover:text-primary">
+        [DEV] TEST_OVERLAY
+      </button>
+    </div>
   }
 </div>

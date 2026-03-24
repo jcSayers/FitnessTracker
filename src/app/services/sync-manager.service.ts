@@ -340,53 +340,110 @@ export class SyncManagerService {
       // Deduplicate items: keep only the latest queue entry for each record
       const dedupedItems = this.deduplicateQueueItems(items);
 
-      const payload = await this.buildSyncPayload(dedupedItems);
+      // Separate delete operations from upsert operations
+      const deleteItems = dedupedItems.filter(item => item.operation === 'delete');
+      const upsertItems = dedupedItems.filter(item => item.operation !== 'delete');
 
-      if (!payload.workoutTemplates && !payload.workoutInstances && !payload.exerciseLogs) {
-        this.diagnostics.logSyncComplete(batchOperationId, 0, 0, true);
-        return true;
+      let upsertSuccess = true;
+      let deleteSuccess = true;
+
+      // Process upserts (create/update)
+      if (upsertItems.length > 0) {
+        const payload = await this.buildSyncPayload(upsertItems);
+
+        if (payload.workoutTemplates || payload.workoutInstances || payload.exerciseLogs) {
+          const response = await firstValueFrom(
+            this.http.post<SyncResponse>(
+              `${this.config.serverUrl}/api/sync`,
+              payload
+            ).pipe(
+              timeout(this.config.syncTimeout || 30000),
+              catchError(error => {
+                const errorMsg = error instanceof HttpErrorResponse
+                  ? `HTTP ${error.status}: ${error.error?.error || error.message}`
+                  : error.message;
+                console.error('[SyncManager] HTTP error:', errorMsg, error);
+                return of<SyncResponse>({ success: false, message: 'Sync failed', error: errorMsg });
+              })
+            )
+          );
+
+          this.lastSyncResult.set(response);
+
+          if (response.success) {
+            if (response.data) {
+              try {
+                await this.updateLocalWithCloudIds(response.data);
+              } catch (error) {
+                console.error('[SyncManager] Error updating local database with cloud IDs:', error);
+              }
+            }
+          } else {
+            console.error('[SyncManager] Batch sync returned error:', response.error || response.message);
+            this.diagnostics.logSyncError(batchOperationId, response.error || response.message || 'Unknown error');
+            upsertSuccess = false;
+          }
+        }
       }
 
+      // Process deletes
+      if (deleteItems.length > 0) {
+        deleteSuccess = await this.sendDeletes(deleteItems);
+        if (!deleteSuccess) {
+          console.error('[SyncManager] Delete sync failed for', deleteItems.length, 'items');
+        }
+      }
+
+      const allSuccess = upsertSuccess && deleteSuccess;
+      if (allSuccess) {
+        this.diagnostics.logSyncComplete(batchOperationId, items.length, this.syncQueue.queueCount(), true);
+      } else {
+        this.diagnostics.logSyncError(batchOperationId, 'One or more sync operations failed');
+      }
+      return allSuccess;
+
+    } catch (error) {
+      console.error('[SyncManager] Batch sync error:', error);
+      this.diagnostics.logSyncError(batchOperationId, error instanceof Error ? error : new Error(String(error)));
+      return false;
+    }
+  }
+
+  /**
+   * Send delete operations to the server
+   */
+  private async sendDeletes(items: SyncQueueItem[]): Promise<boolean> {
+    try {
+      const deletePayload = {
+        userId: this.config.userId,
+        deletes: items.map(item => ({
+          dataType: item.dataType,
+          recordId: item.recordId
+        }))
+      };
+
       const response = await firstValueFrom(
-        this.http.post<SyncResponse>(
-          `${this.config.serverUrl}/api/sync`,
-          payload
+        this.http.post<{ success: boolean; error?: string }>(
+          `${this.config.serverUrl}/api/sync/delete-records`,
+          deletePayload
         ).pipe(
           timeout(this.config.syncTimeout || 30000),
           catchError(error => {
             const errorMsg = error instanceof HttpErrorResponse
               ? `HTTP ${error.status}: ${error.error?.error || error.message}`
               : error.message;
-            console.error('[SyncManager] HTTP error:', errorMsg, error);
-            return of<SyncResponse>({ success: false, message: 'Sync failed', error: errorMsg });
+            console.error('[SyncManager] Delete HTTP error:', errorMsg, error);
+            return of({ success: false, error: errorMsg });
           })
         )
       );
 
-      this.lastSyncResult.set(response);
-
-      if (response.success) {
-        // Update local database with returned UUIDs (cloudId mappings)
-        if (response.data) {
-          try {
-            await this.updateLocalWithCloudIds(response.data);
-          } catch (error) {
-            console.error('[SyncManager] Error updating local database with cloud IDs:', error);
-            // Don't fail the sync if this step fails - data is already in Supabase
-          }
-        }
-
-        this.diagnostics.logSyncComplete(batchOperationId, items.length, this.syncQueue.queueCount(), true);
-        return true;
-      } else {
-        console.error('[SyncManager] Batch sync returned error:', response.error || response.message);
-        this.diagnostics.logSyncError(batchOperationId, response.error || response.message || 'Unknown error');
-        return false;
+      if (!response.success) {
+        console.error('[SyncManager] Delete records failed:', response.error);
       }
-
+      return response.success;
     } catch (error) {
-      console.error('[SyncManager] Batch sync error:', error);
-      this.diagnostics.logSyncError(batchOperationId, error instanceof Error ? error : new Error(String(error)));
+      console.error('[SyncManager] sendDeletes error:', error);
       return false;
     }
   }
@@ -491,11 +548,6 @@ export class SyncManagerService {
     const logs: ExerciseLog[] = [];
 
     for (const item of items) {
-      if (item.operation === 'delete') {
-        // For now, skip deletes (server should handle via soft deletes)
-        continue;
-      }
-
       try {
         if (item.dataType === 'template') {
           const template = await this.db.getWorkoutTemplate(item.recordId);

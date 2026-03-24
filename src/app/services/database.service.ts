@@ -4,6 +4,7 @@ import {
   WorkoutTemplate,
   WorkoutInstance,
   WorkoutStats,
+  WorkoutSet,
   ExerciseLog,
   WorkoutStatus,
   WorkoutCategory,
@@ -550,6 +551,51 @@ export class DatabaseService {
   }
 
   // Utility methods
+
+  async getExerciseProgression(): Promise<Array<{
+    name: string;
+    sessions: Array<{ date: Date; maxWeight: number }>;
+  }>> {
+    const templates = await this.db.workoutTemplates.toArray();
+    const exerciseMap = new Map<string, string>();
+    for (const template of templates) {
+      for (const exercise of template.exercises) {
+        exerciseMap.set(exercise.id, exercise.name);
+      }
+    }
+
+    const instances = (await this.db.workoutInstances
+      .where('status')
+      .equals(WorkoutStatus.COMPLETED)
+      .toArray()
+    ).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+    const byExercise = new Map<string, { name: string; sessions: { date: Date; maxWeight: number }[] }>();
+
+    for (const instance of instances) {
+      const setsByEx = new Map<string, WorkoutSet[]>();
+      for (const set of (instance.sets || [])) {
+        if (!set.completed) continue;
+        const existing = setsByEx.get(set.exerciseId) ?? [];
+        existing.push(set);
+        setsByEx.set(set.exerciseId, existing);
+      }
+      for (const [exId, sets] of setsByEx) {
+        const name = exerciseMap.get(exId) || 'Unknown';
+        if (!byExercise.has(exId)) {
+          byExercise.set(exId, { name, sessions: [] });
+        }
+        byExercise.get(exId)!.sessions.push({
+          date: new Date(instance.startTime),
+          maxWeight: Math.max(...sets.map(s => s.weight ?? 0))
+        });
+      }
+    }
+
+    return Array.from(byExercise.values())
+      .filter(e => e.sessions.some(s => s.maxWeight > 0))
+      .sort((a, b) => b.sessions.length - a.sessions.length);
+  }
 
   async exportData(): Promise<any> {
     return {

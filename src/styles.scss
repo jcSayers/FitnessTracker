@@ -21,3 +21,30 @@ html, body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: #131313; }
 ::-webkit-scrollbar-thumb { background: #474747; }
+
+input,
+select,
+textarea {
+  background: transparent;
+  color: #e2e2e2;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #131313 inset !important;
+  -webkit-text-fill-color: #e2e2e2 !important;
+  caret-color: #e2e2e2;
+}

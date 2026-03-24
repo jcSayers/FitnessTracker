@@ -1,5 +1,9 @@
-<app-top-app-bar></app-top-app-bar>
-<main class="pt-16 pb-20 min-h-screen bg-background">
+@if (!isLoginPage()) {
+  <app-top-app-bar></app-top-app-bar>
+}
+<main [class]="isLoginPage() ? 'min-h-screen bg-background' : 'pt-16 pb-20 min-h-screen bg-background'">
   <router-outlet></router-outlet>
 </main>
-<app-bottom-navigation></app-bottom-navigation>
+@if (!isLoginPage()) {
+  <app-bottom-navigation></app-bottom-navigation>
+}

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 
 import { WorkoutBuilderService } from '../../services/workout-builder.service';
 import { DatabaseService } from '../../services/database.service';
-import { SvgIconComponent, ToastService } from '../../shared';
+import { ToastService } from '../../shared';
 import { WorkoutTemplate, Exercise } from '../../models/workout.models';
 
 @Component({
@@ -12,7 +12,6 @@ import { WorkoutTemplate, Exercise } from '../../models/workout.models';
   standalone: true,
   imports: [
     CommonModule,
-    SvgIconComponent
   ],
   templateUrl: './manage-exercises.component.html',
   styleUrls: ['./manage-exercises.component.scss']

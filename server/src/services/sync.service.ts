@@ -444,6 +444,61 @@ export class SyncService {
   }
 
   /**
+   * Delete specific records by local ID or cloud ID
+   * Used when the client queues individual delete operations
+   */
+  async deleteRecords(
+    userId: string,
+    deletes: Array<{ dataType: 'template' | 'instance' | 'log'; recordId: string }>
+  ): Promise<{ success: boolean; deleted: number; error?: string }> {
+    const tableMap: Record<string, string> = {
+      template: 'workout_templates',
+      instance: 'workout_instances',
+      log: 'exercise_logs'
+    };
+
+    let deleted = 0;
+
+    try {
+      for (const item of deletes) {
+        const table = tableMap[item.dataType];
+        if (!table) continue;
+
+        // Try deleting by local_id first, then by id (cloud UUID), scoped to this user
+        const { error: localIdError, count: localCount } = await this.supabase
+          .from(table)
+          .delete({ count: 'exact' })
+          .eq('user_id', userId)
+          .eq('local_id', item.recordId);
+
+        if (!localIdError && (localCount ?? 0) > 0) {
+          deleted += localCount!;
+          continue;
+        }
+
+        // Fall back to matching by cloud UUID (in case recordId is already a UUID)
+        const { error: idError, count: idCount } = await this.supabase
+          .from(table)
+          .delete({ count: 'exact' })
+          .eq('user_id', userId)
+          .eq('id', item.recordId);
+
+        if (!idError && (idCount ?? 0) > 0) {
+          deleted += idCount!;
+        } else if (idError) {
+          console.error(`[deleteRecords] Error deleting ${item.dataType} ${item.recordId}:`, idError);
+        }
+      }
+
+      return { success: true, deleted };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[deleteRecords] Error:', errorMessage);
+      return { success: false, deleted, error: errorMessage };
+    }
+  }
+
+  /**
    * Delete user data
    */
   async deleteUserData(userId: string): Promise<{ success: boolean; error?: string }> {

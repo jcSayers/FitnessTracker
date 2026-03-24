@@ -7,6 +7,7 @@ import { initializeSupabase } from './config/supabase.js';
 import { swaggerSpec } from './config/swagger.js';
 import syncRoutes from './routes/sync.routes.js';
 import importRoutes from './routes/import.routes.js';
+import garminRoutes from './routes/garmin.routes.js';
 
 // Initialize environment variables
 config.validate();
@@ -107,6 +108,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api', syncRoutes);
 app.use('/api/import', upload.single('file'), importRoutes);
+app.use('/api/garmin', garminRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

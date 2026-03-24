@@ -8,8 +8,8 @@
       <div class="text-[10px] uppercase tracking-widest text-outline">Network Status</div>
       <div class="flex items-end justify-between">
         <div class="text-2xl font-bold tracking-tighter">
-          <ng-container *ngIf="isOnline()">PING... <span class="text-primary">[OK]</span></ng-container>
-          <ng-container *ngIf="!isOnline()"><span class="text-error">[OFFLINE]</span></ng-container>
+          @if (isOnline()) { PING... <span class="text-primary">[OK]</span> }
+          @else { <span class="text-error">[OFFLINE]</span> }
         </div>
       </div>
       <div class="text-[9px] text-outline-variant mt-1">TYPE: {{ effectiveType() }}</div>
@@ -114,6 +114,51 @@
           <span class="text-[10px]">{{ isSyncing() ? '[SYNCING]' : '[IDLE]' }}</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- GARMIN INTEGRATION -->
+  <div class="border border-outline-variant mb-6">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-outline-variant bg-surface-container">
+      <span class="text-[10px] font-bold tracking-widest text-outline uppercase">External_Device :: Garmin_Health_API</span>
+      <span class="text-[9px] uppercase tracking-widest" [class.text-primary]="garminConnected()" [class.text-outline]="!garminConnected()">
+        {{ garminConnected() ? '[LINKED]' : '[UNLINKED]' }}
+      </span>
+    </div>
+    <div class="p-4 space-y-3">
+      @if (garminConnected()) {
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-widest text-on-surface">STATUS: CONNECTED</div>
+            @if (garminConnectedAt()) {
+              <div class="text-[9px] text-outline-variant mt-1">LINKED: {{ garminConnectedAt() | date:'yyyy-MM-dd HH:mm' }}</div>
+            }
+            <div class="text-[9px] text-outline mt-1">Activities auto-sync via webhook on device upload</div>
+          </div>
+          <button
+            (click)="disconnectGarmin()"
+            [disabled]="garminLoading()"
+            class="text-[9px] uppercase tracking-widest border border-error text-error px-3 py-2 hover:bg-error hover:text-on-error disabled:opacity-50">
+            {{ garminLoading() ? '[ WORKING... ]' : '[ DISCONNECT ]' }}
+          </button>
+        </div>
+      } @else {
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-widest text-on-surface">STATUS: NOT CONNECTED</div>
+            <div class="text-[9px] text-outline mt-1">Link your Garmin account to auto-import activities</div>
+          </div>
+          <button
+            (click)="connectGarmin()"
+            [disabled]="garminLoading()"
+            class="text-[9px] uppercase tracking-widest bg-primary text-on-primary px-3 py-2 hover:bg-on-surface hover:text-surface disabled:opacity-50">
+            {{ garminLoading() ? '[ LINKING... ]' : '[ CONNECT_GARMIN ]' }}
+          </button>
+        </div>
+      }
+      @if (garminError()) {
+        <div class="text-[9px] text-error uppercase tracking-widest">&gt;&gt;&gt; ERR: {{ garminError() }}</div>
+      }
     </div>
   </div>
 

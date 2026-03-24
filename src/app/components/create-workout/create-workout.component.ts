@@ -5,7 +5,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { WorkoutBuilderService } from '../../services/workout-builder.service';
 import { DatabaseService } from '../../services/database.service';
-import { SvgIconComponent } from '../../shared';
 import { WorkoutCategory, DifficultyLevel } from '../../models/workout.models';
 
 @Component({
@@ -14,7 +13,6 @@ import { WorkoutCategory, DifficultyLevel } from '../../models/workout.models';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    SvgIconComponent
   ],
   templateUrl: './create-workout.component.html',
   styleUrls: ['./create-workout.component.scss']

@@ -34,9 +34,25 @@
       "Bash(bash \"C:/Users/boyba/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/Dev/FitnessTracker\")",
       "Bash(xargs grep:*)",
       "Bash(ls C:/Dev/FitnessTracker/tailwind.config*)",
-      "Bash(ls C:/Dev/FitnessTracker/*.config*)"
+      "Bash(ls C:/Dev/FitnessTracker/*.config*)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|html\\)$\")",
+      "Bash(find c:/Dev/FitnessTracker -type f -name .env*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(find /c/Dev/FitnessTracker/src/app/services -type f -name *.ts)",
+      "Bash(find /c/Dev/FitnessTracker -type f \\\\\\(-name *.env* -o -name env.ts \\\\\\))",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(npx ng:*)",
+      "Bash(npx tsc:*)",
+      "Bash(C:Usersboyba.claudepluginscacheclaude-plugins-officialsuperpowers5.0.5skillsbrainstormingscriptsstart-server.sh --project-dir c:/Dev/FitnessTracker)",
+      "Bash(bash \"/c/Users/boyba/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"/c/Dev/FitnessTracker\")",
+      "Bash(for i:*)",
+      "Bash(do sleep:*)",
+      "Bash(break)",
+      "Bash(done)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "bypassPermissions"
   }
 }

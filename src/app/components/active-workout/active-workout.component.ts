@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
+import { WorkoutCompleteOverlayComponent } from '../workout-complete-overlay/workout-complete-overlay.component';
+import { environment } from '../../../environments/environment';
 import { DatabaseService } from '../../services/database.service';
 import { ToastService } from '../../shared';
 import {
@@ -18,7 +20,8 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    WorkoutCompleteOverlayComponent,
   ],
   templateUrl: './active-workout.component.html',
   styleUrls: ['./active-workout.component.scss']
@@ -50,6 +53,11 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   completedSets = signal(0);
   totalSets = signal(0);
 
+  showCompleteOverlay = signal(false);
+  overlayElapsedSeconds = signal(0);
+  overlaySets = signal(0);
+  readonly isDev = !environment.production;
+
   // Computed signals for terminal UI
   currentExercise = computed(() => {
     const t = this.workoutTemplate();
@@ -80,6 +88,14 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       active: i === doneForThisExercise,
     }));
   });
+
+  updateWeight(value: number) {
+    this.currentSet.set({ ...this.currentSet(), weight: value });
+  }
+
+  updateReps(value: number) {
+    this.currentSet.set({ ...this.currentSet(), reps: value });
+  }
 
   asciiRestBar(remaining: number, total: number, width = 20): string {
     const f = total > 0 ? Math.round(((total - remaining) / total) * width) : 0;
@@ -307,6 +323,11 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.workoutInstance.set(updatedInstance);
       this.calculateProgress();
 
+      // Check and update personal record for this exercise
+      if (currentSetData.weight && currentSetData.weight > 0) {
+        await this.checkAndUpdatePR(exercise.id, currentSetData.weight);
+      }
+
       // Start rest period if not the last set
       if (this.hasNextSet()) {
         this.startRestPeriod(exercise.restTime || 60);
@@ -431,11 +452,17 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.stopTimer();
       this.stopRestTimer();
 
-      this.toastService.success('Workout completed! Great job!', 3000);
-      this.router.navigate(['/history']);
+      this.overlayElapsedSeconds.set(this.elapsedTime());
+      this.overlaySets.set(this.completedSets());
+      this.showCompleteOverlay.set(true);
     } catch (error) {
       console.error('Error finishing workout:', error);
     }
+  }
+
+  onOverlayDismissed() {
+    this.showCompleteOverlay.set(false);
+    this.router.navigate(['/history']);
   }
 
   private startTimer() {
@@ -468,6 +495,36 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
     const template = this.workoutTemplate();
     const exerciseIndex = this.currentExerciseIndex();
     return template ? exerciseIndex >= template.exercises.length : false;
+  }
+
+  private async checkAndUpdatePR(exerciseId: string, weight: number): Promise<void> {
+    if (!exerciseId || !weight || weight <= 0) return;
+    try {
+      const templates = await this.databaseService.getAllWorkoutTemplates();
+      let foundExercise: Exercise | undefined;
+      let foundTemplate: WorkoutTemplate | undefined;
+
+      for (const template of templates) {
+        const ex = template.exercises.find(e => e.id === exerciseId);
+        if (ex) {
+          foundExercise = ex;
+          foundTemplate = template;
+          break;
+        }
+      }
+
+      if (!foundExercise || !foundTemplate) return;
+
+      if (!foundExercise.personalRecord || weight > foundExercise.personalRecord) {
+        const updatedExercise: Exercise = { ...foundExercise, personalRecord: weight };
+        const updatedExercises = foundTemplate.exercises.map(e =>
+          e.id === exerciseId ? updatedExercise : e
+        );
+        const updatedTemplate: WorkoutTemplate = { ...foundTemplate, exercises: updatedExercises };
+        await this.databaseService.updateWorkoutTemplate(updatedTemplate);
+        this.toastService?.success?.(`PR: ${weight}kg on ${foundExercise.name}!`, 3000);
+      }
+    } catch {}
   }
 
   private generateId(): string {

@@ -14,6 +14,11 @@ export const config = {
 
   // API Configuration
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:4200',
+  APP_BASE_URL: process.env.APP_BASE_URL || 'http://localhost:3000',
+
+  // Garmin Health API OAuth 1.0a
+  GARMIN_CONSUMER_KEY: process.env.GARMIN_CONSUMER_KEY || '',
+  GARMIN_CONSUMER_SECRET: process.env.GARMIN_CONSUMER_SECRET || '',
 
   // Validation
   isProduction: () => config.NODE_ENV === 'production',

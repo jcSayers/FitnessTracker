@@ -12,6 +12,7 @@ export interface Exercise {
   category: ExerciseCategory;
   isSupersetWith?: string; // ID of the exercise this forms a superset with
   isDropset?: boolean; // Whether this is a dropset (lighter weight, higher reps after main exercise)
+  personalRecord?: number; // Best weight lifted in kg
 }
 
 export enum ExerciseCategory {

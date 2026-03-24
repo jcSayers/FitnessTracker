@@ -619,6 +619,73 @@ router.get('/sync/:userId/status', async (req: Request, res: Response) => {
 
 /**
  * @swagger
+ * /sync/delete-records:
+ *   post:
+ *     tags:
+ *       - Sync
+ *     summary: Delete specific records by local ID
+ *     description: Deletes individual records (templates, instances, or logs) for a user. Used to sync client-side deletes to the server.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               deletes:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     dataType:
+ *                       type: string
+ *                       enum: [template, instance, log]
+ *                     recordId:
+ *                       type: string
+ *     responses:
+ *       '200':
+ *         description: Records deleted successfully
+ *       '400':
+ *         description: Missing required fields
+ *       '500':
+ *         description: Server error during deletion
+ */
+router.post('/sync/delete-records', async (req: Request, res: Response) => {
+  try {
+    const { userId, deletes } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'userId is required' });
+    }
+
+    if (!deletes || !Array.isArray(deletes) || deletes.length === 0) {
+      return res.status(400).json({ success: false, error: 'deletes array is required and must not be empty' });
+    }
+
+    const resolvedUserId = await syncService.resolveUserId(userId);
+    console.log('[Sync] Deleting', deletes.length, 'records for user:', resolvedUserId);
+
+    const result = await syncService.deleteRecords(resolvedUserId, deletes);
+
+    if (result.success) {
+      return res.json({
+        success: true,
+        message: `Deleted ${result.deleted} records`
+      });
+    } else {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Sync] delete-records error:', error);
+    res.status(500).json({ success: false, error: errorMessage });
+  }
+});
+
+/**
+ * @swagger
  * /sync/{userId}:
  *   delete:
  *     tags:

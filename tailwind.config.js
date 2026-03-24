@@ -43,6 +43,8 @@ module.exports = {
       "outline-variant":            "#474747",
       "inverse-surface":            "#e2e2e2",
       "inverse-on-surface":         "#303030",
+      "inverse-primary":            "#5d5f5f",
+      "surface-tint":               "#c6c6c7",
     },
     extend: {
       fontFamily: {
